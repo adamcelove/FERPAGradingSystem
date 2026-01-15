@@ -1,0 +1,183 @@
+# Completeness Rubric Configuration
+# ==================================
+# This file defines what makes a "complete" teacher comment.
+# School administrators can adjust these criteria.
+
+# Version tracking for rubric changes
+version: "1.0.0"
+effective_date: "2026-01-15"
+
+# Rubric Definition
+# Each criterion contributes to the completeness score
+rubric:
+  # Criterion 1: Specificity
+  # Does the comment reference specific work, behavior, or examples?
+  specificity:
+    weight: 0.30
+    description: "Comment references specific student work, behavior, or examples"
+    examples:
+      complete:
+        - "Your analysis of the symbolism in Chapter 3 showed excellent critical thinking"
+        - "The lab report demonstrated strong understanding of the scientific method"
+        - "Your participation in the group project, especially the presentation slides, was outstanding"
+      incomplete:
+        - "Good work"
+        - "Needs improvement"
+        - "Shows potential"
+    
+    # Keywords/patterns that suggest specificity
+    positive_indicators:
+      - "your \\w+ (on|in|about|for)"
+      - "the (essay|report|project|assignment|test|quiz)"
+      - "specifically"
+      - "for example"
+      - "in particular"
+      - "demonstrated in"
+    
+    # Keywords that suggest generic/non-specific
+    negative_indicators:
+      - "^(good|great|nice|excellent) (work|job)!?$"
+      - "^needs (improvement|work)$"
+      - "^keep (it )?up$"
+
+  # Criterion 2: Actionability
+  # Does the comment provide guidance for improvement or next steps?
+  actionability:
+    weight: 0.25
+    description: "Comment provides actionable feedback or clear next steps"
+    examples:
+      complete:
+        - "Focus on showing your work in multi-step problems to improve your grade"
+        - "Continue practicing verb conjugations - consider using flashcards"
+        - "For your next essay, try outlining before writing to improve organization"
+      incomplete:
+        - "Try harder"
+        - "More effort needed"
+        - "See me"
+    
+    positive_indicators:
+      - "try (to|doing)"
+      - "focus on"
+      - "work on"
+      - "practice"
+      - "next time"
+      - "for your next"
+      - "consider"
+      - "I recommend"
+      - "continue"
+      - "keep (up|working)"
+    
+    negative_indicators:
+      - "^see me\\.?$"
+      - "^try harder\\.?$"
+      - "^more effort\\.?$"
+
+  # Criterion 3: Evidence-Based
+  # Does the comment cite evidence rather than just opinion?
+  evidence_based:
+    weight: 0.20
+    description: "Comment cites observable evidence or specific outcomes"
+    examples:
+      complete:
+        - "You scored 92% on the unit test, showing mastery of the concepts"
+        - "Your attendance has improved from 70% to 95% this quarter"
+        - "You completed all 10 homework assignments on time"
+      incomplete:
+        - "You're smart"
+        - "I think you can do better"
+        - "You seem distracted"
+    
+    positive_indicators:
+      - "\\d+%"
+      - "\\d+ out of \\d+"
+      - "scored"
+      - "completed"
+      - "submitted"
+      - "demonstrated"
+      - "showed"
+      - "exhibited"
+    
+    negative_indicators:
+      - "I (think|believe|feel)"
+      - "seems? (like|to)"
+      - "appears to"
+      - "probably"
+
+  # Criterion 4: Appropriate Length
+  # Is the comment substantive enough to be meaningful?
+  appropriate_length:
+    weight: 0.15
+    description: "Comment has sufficient length to convey meaningful feedback"
+    
+    # Minimum word count for a "complete" comment
+    minimum_words: 15
+    
+    # Ideal range
+    ideal_range:
+      min: 25
+      max: 150
+    
+    # Scoring
+    scoring:
+      below_minimum: 0.0
+      at_minimum: 0.5
+      in_ideal_range: 1.0
+      above_ideal: 0.9  # Very long comments may be unfocused
+
+  # Criterion 5: Professional Tone
+  # Is the comment written in appropriate professional language?
+  professional_tone:
+    weight: 0.10
+    description: "Comment maintains professional, constructive tone"
+    examples:
+      complete:
+        - "While there's room for improvement in time management, your creativity shines through"
+        - "The quality of your work has been inconsistent this term; let's discuss strategies"
+      incomplete:
+        - "???"
+        - "What happened?!"
+        - "Disappointing"
+        - "Finally!"
+    
+    negative_indicators:
+      - "^\\?+$"
+      - "!{2,}"
+      - "disappointing"
+      - "finally[!.]?"
+      - "terrible"
+      - "awful"
+      - "lazy"
+
+# Minimum Completeness Score
+# Comments scoring below this are flagged for review
+minimum_score: 0.60
+
+# Override Rules
+# Special cases where completeness requirements differ
+overrides:
+  # High-achieving students may have shorter comments
+  high_grades:
+    applies_to: ["A+", "A", "A-"]
+    minimum_score: 0.50
+    note: "Reduced requirements for top performers"
+  
+  # Struggling students need more detailed feedback
+  low_grades:
+    applies_to: ["D+", "D", "D-", "F"]
+    minimum_score: 0.75
+    required_criteria:
+      - actionability
+    note: "Students with low grades require actionable feedback"
+
+# Department-Specific Adjustments
+# Uncomment and modify as needed
+# department_overrides:
+#   physical_education:
+#     minimum_words: 10
+#     minimum_score: 0.50
+#   
+#   special_education:
+#     minimum_score: 0.70
+#     required_criteria:
+#       - specificity
+#       - actionability

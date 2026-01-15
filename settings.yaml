@@ -1,0 +1,146 @@
+# FERPA Comment Feedback System Configuration
+# ============================================
+
+# Pipeline Configuration
+pipeline:
+  # Enable/disable individual stages
+  stages:
+    grammar: true
+    name_matching: true
+    completeness: true
+    grade_consistency: true
+  
+  # Processing mode
+  batch_size: 10  # Comments to process before checkpoint
+  checkpoint_enabled: true
+  checkpoint_dir: "./checkpoints"
+
+# FERPA Compliance Settings
+# WARNING: Do not modify these unless you understand the compliance implications
+ferpa:
+  # CRITICAL: Must be true for FERPA compliance
+  anonymize_before_api: true
+  
+  # Audit logging
+  log_all_api_calls: true
+  log_retention_days: 2555  # ~7 years per FERPA
+  
+  # Data handling
+  delete_temp_files: true
+  encrypt_at_rest: false  # Enable if required by institution
+
+# Confidence Thresholds
+# Used to route items to auto-accept, human review, or auto-reject
+confidence_thresholds:
+  # Grammar suggestions with confidence >= this are auto-accepted
+  grammar_auto_accept: 0.95
+  
+  # Name matches with confidence >= this are considered correct
+  name_match_high: 0.95
+  name_match_medium: 0.80
+  name_match_low: 0.60  # Below this = flag for review
+  
+  # Semantic analysis thresholds
+  completeness_flag: 0.70  # Below this = flag as potentially incomplete
+  consistency_flag: 0.70   # Below this = flag as potentially inconsistent
+
+# LanguageTool Configuration
+grammar:
+  # Language code
+  language: "en-US"
+  
+  # Rules to disable (IDs from LanguageTool)
+  disabled_rules:
+    - "WHITESPACE_RULE"  # Often triggers on formatted documents
+    - "COMMA_PARENTHESIS_WHITESPACE"
+  
+  # Additional words to add to dictionary (loaded from file)
+  custom_dictionary_file: "./config/custom_words.txt"
+  
+  # Rules specific to teacher comments
+  enabled_only_rules: []  # Empty = all rules enabled
+
+# Name Detection Configuration
+name_detection:
+  # Primary model for NER
+  model: "gliner"  # Options: gliner, spacy, hybrid
+  
+  # GLiNER specific settings
+  gliner:
+    model_name: "urchade/gliner_base"
+    threshold: 0.5
+    
+  # SpaCy specific settings  
+  spacy:
+    model_name: "en_core_web_trf"
+    
+  # Fuzzy matching settings for roster comparison
+  fuzzy_match:
+    threshold: 85  # Minimum similarity score (0-100)
+    algorithm: "token_sort_ratio"  # rapidfuzz algorithm
+
+# Anonymization Configuration
+anonymization:
+  # Entities to detect and replace
+  entities:
+    - PERSON
+    - EMAIL_ADDRESS
+    - PHONE_NUMBER
+    - US_SSN
+    - DATE_OF_BIRTH
+  
+  # Placeholder format
+  placeholder_format: "[{entity_type}_{index}]"
+  
+  # Presidio configuration
+  presidio:
+    # NER model for Presidio
+    nlp_engine: "spacy"
+    spacy_model: "en_core_web_lg"
+
+# API Configuration (Stage 4 - Semantic Analysis)
+api:
+  # Provider settings
+  provider: "anthropic"
+  model: "claude-sonnet-4-20250514"
+  
+  # Rate limiting
+  requests_per_minute: 50
+  max_retries: 3
+  
+  # Cost controls
+  max_tokens_per_request: 1000
+  warn_if_batch_exceeds_usd: 10.0
+
+# Document Parsing
+document:
+  # Expected structure patterns
+  # The system will try each pattern in order
+  structure_patterns:
+    - name: "header_grade_comment"
+      student_name_pattern: "^(?:Student[: ]+)?(.+?)$"
+      grade_pattern: "^Grade[: ]+([A-F][+-]?|[0-9]+(?:\\.[0-9]+)?%?)$"
+      comment_follows_grade: true
+      
+    - name: "table_format"
+      is_table: true
+      name_column: 0
+      grade_column: 1
+      comment_column: 2
+
+# Output Configuration
+output:
+  # Report format
+  report_format: "json"  # Options: json, csv, html
+  
+  # Include original text in output (may contain PII)
+  include_original: false  # Set to true only for internal review
+  
+  # Aggregation
+  generate_summary: true
+  summary_includes:
+    - total_comments
+    - grammar_issues_count
+    - name_mismatches_count
+    - incomplete_comments_count
+    - inconsistent_grades_count
