@@ -27,7 +27,7 @@ Focus: Get the pipeline running end-to-end by fixing structure, creating missing
   - _Requirements: FR-1, AC-1.1, AC-1.2_
   - _Design: Project Structure Transformation_
 
-- [ ] 1.1.2 Create __init__.py files for package
+- [x] 1.1.2 Create __init__.py files for package
   - **Do**: Create package init files with proper exports
     1. Create `src/ferpa_feedback/__init__.py` with version and key exports
     2. Create `src/ferpa_feedback/recognizers/__init__.py` with empty exports
