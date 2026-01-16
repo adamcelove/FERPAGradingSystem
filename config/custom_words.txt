@@ -1,0 +1,26 @@
+# Custom Dictionary for FERPA Feedback System
+# Add words here that should not be flagged as spelling errors
+# One word per line, lines starting with # are comments
+
+# Common educational terms
+rubric
+rubrics
+formative
+summative
+metacognitive
+metacognition
+differentiated
+scaffolding
+scaffolded
+
+# Grade levels and terms
+prekindergarten
+pre-k
+k-12
+
+# Common abbreviations used in comments
+hw
+classwork
+coursework
+
+# Subject-specific terms (add as needed)
