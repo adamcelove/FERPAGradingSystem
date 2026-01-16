@@ -133,20 +133,34 @@ def warmup() -> None:
     This command initializes the LanguageTool Java server before
     processing begins, avoiding the 10-30 second cold start delay.
     """
+    from ferpa_feedback.stage_1_grammar import GrammarChecker
+
     console.print("[bold blue]Warming up LanguageTool...[/]")
 
-    # POC stub - actual warmup will be implemented in Phase 2
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
         console=console,
     ) as progress:
-        progress.add_task("Initializing LanguageTool server...", total=None)
-        # Placeholder for actual warmup logic
-        # In production, this would call:
-        # from ferpa_feedback.stage_1_grammar import create_grammar_checker
-        # checker = create_grammar_checker({})
-        # checker.warm_up()
+        task = progress.add_task("Initializing LanguageTool server...", total=None)
+
+        try:
+            # Create GrammarChecker and force lazy load of LanguageTool
+            checker = GrammarChecker()
+            progress.update(task, description="Starting LanguageTool Java server...")
+
+            # Force the lazy initialization by accessing the tool property
+            _ = checker.tool
+
+            progress.update(task, description="LanguageTool server started")
+
+            # Run a simple check to verify the server is responsive
+            progress.update(task, description="Verifying server is responsive...")
+            _ = checker.check_text("Test sentence.")
+
+        except Exception as e:
+            console.print(f"[red]Failed to warm up LanguageTool: {e}[/]")
+            raise typer.Exit(code=1)
 
     console.print("[bold green]LanguageTool ready.[/]")
 

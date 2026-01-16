@@ -384,7 +384,7 @@ After POC validated, clean up code and implement full functionality.
   - _Requirements: FR-12_
   - _Design: CLI Module_
 
-- [ ] 2.4.3 Quality Checkpoint
+- [x] 2.4.3 Quality Checkpoint
   - **Do**: Run quality checks after Stage 4 and 5 refactoring
   - **Verify**: All commands must pass:
     - Stage 4 imports: `python -c "import sys; sys.path.insert(0, 'src'); from ferpa_feedback.stage_4_semantic import SemanticAnalysisProcessor, CompletenessAnalyzer, ConsistencyAnalyzer; print('Stage 4 complete')"`
@@ -394,7 +394,7 @@ After POC validated, clean up code and implement full functionality.
 
 ### 2.5 CLI Polish and LanguageTool Warmup
 
-- [ ] 2.5.1 Implement warmup command
+- [x] 2.5.1 Implement warmup command
   - **Do**: Add LanguageTool warmup command to reduce cold start
     1. Update `warmup` command in cli.py
     2. Pre-load LanguageTool server
