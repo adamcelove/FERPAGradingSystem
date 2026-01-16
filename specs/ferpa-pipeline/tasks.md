@@ -494,7 +494,7 @@ Add comprehensive test coverage for critical stages.
   - _Requirements: AC-4.2_
   - _Design: Unit Tests - TestCustomRecognizers_
 
-- [ ] 3.3.2 Add PII recall tests
+- [x] 3.3.2 Add PII recall tests
   - **Do**: Test that PII detection achieves 95% recall target
     1. Create test corpus with known PII
     2. Add test verifying >= 95% recall

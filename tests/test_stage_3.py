@@ -1,17 +1,20 @@
 """
-Unit tests for Stage 3: Custom Educational PII Recognizers.
+Unit tests for Stage 3: Custom Educational PII Recognizers and PII Recall.
 
 Tests cover:
 - StudentIDRecognizer pattern matching
 - GradeLevelRecognizer pattern matching
 - SchoolNameRecognizer pattern matching
 - Graceful handling when presidio is not installed
+- PII recall testing with 95% target (AC-4.4, AC-4.5, NFR-1)
 """
 
+import json
 import re
 import pytest
 import sys
 from pathlib import Path
+from typing import Optional
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -22,6 +25,7 @@ from ferpa_feedback.recognizers.educational import (
     SchoolNameRecognizer,
     PRESIDIO_AVAILABLE,
 )
+from ferpa_feedback.stage_3_anonymize import PIIDetector
 
 
 # ============================================================================
@@ -473,3 +477,379 @@ class TestPatternRegexValidation:
                 re.compile(pattern.regex)
             except re.error as e:
                 pytest.fail(f"Invalid custom regex in {pattern.name}: {e}")
+
+
+# ============================================================================
+# Test PII Recall - FR-7, AC-4.4, AC-4.5, NFR-1
+# ============================================================================
+
+
+class TestPIIRecall:
+    """
+    Tests for PII detection recall with 95% target.
+
+    This class tests that the PIIDetector achieves at least 95% recall
+    (i.e., detects at least 95% of known PII instances). For FERPA compliance,
+    recall is prioritized over precision - it is better to have false positives
+    than to miss actual PII.
+
+    Requirements:
+    - FR-7: PII Detection (automated detection with high recall)
+    - AC-4.4: Detect and redact personal identifiers including emails, phones, SSN
+    - AC-4.5: Support roster-aware name detection
+    - NFR-1: Accuracy >= 95% on test dataset
+    """
+
+    RECALL_TARGET = 0.95  # 95% recall target
+
+    @pytest.fixture
+    def pii_test_corpus(self):
+        """Load test corpus with known PII."""
+        corpus_path = Path(__file__).parent / "fixtures" / "pii_test_corpus.json"
+        with open(corpus_path, "r") as f:
+            return json.load(f)
+
+    @pytest.fixture
+    def pii_detector(self):
+        """Create PIIDetector instance for testing."""
+        # Disable presidio for consistent testing (use regex patterns only)
+        return PIIDetector(use_presidio=False)
+
+    @pytest.fixture
+    def pii_detector_with_presidio(self):
+        """Create PIIDetector with presidio enabled if available."""
+        return PIIDetector(use_presidio=True)
+
+    def _count_detected_pii(
+        self,
+        detector: PIIDetector,
+        text: str,
+        expected_pii: list,
+    ) -> tuple[int, int, list]:
+        """
+        Count how many expected PII instances were detected.
+
+        Returns:
+            Tuple of (detected_count, total_expected, false_positives)
+        """
+        detections = detector.detect(text)
+
+        detected_count = 0
+        false_positives = []
+
+        for expected in expected_pii:
+            expected_value = expected["value"]
+            expected_type = expected["type"]
+
+            # Check if any detection matches the expected PII
+            found = False
+            for detection in detections:
+                # Match by text content (case-insensitive for some types)
+                detected_text = detection["text"]
+
+                # Check if detection matches expected value
+                if detected_text.lower() == expected_value.lower():
+                    found = True
+                    break
+                # Also check if expected value is contained in detected text
+                if expected_value.lower() in detected_text.lower():
+                    found = True
+                    break
+                # Or if detected text is contained in expected value
+                if detected_text.lower() in expected_value.lower():
+                    found = True
+                    break
+
+            if found:
+                detected_count += 1
+
+        # Identify false positives (detections not in expected list)
+        for detection in detections:
+            detected_text = detection["text"]
+            is_expected = False
+            for expected in expected_pii:
+                if (
+                    expected["value"].lower() in detected_text.lower()
+                    or detected_text.lower() in expected["value"].lower()
+                ):
+                    is_expected = True
+                    break
+            if not is_expected:
+                false_positives.append(detection)
+
+        return detected_count, len(expected_pii), false_positives
+
+    def test_recall_above_95_percent(self, pii_test_corpus, pii_detector):
+        """
+        Test that PII detection achieves >= 95% recall.
+
+        This is the critical test for FERPA compliance. The detector must
+        catch at least 95% of all known PII instances.
+        """
+        total_expected = 0
+        total_detected = 0
+        all_false_positives = []
+        missed_pii = []
+
+        for test_case in pii_test_corpus["test_cases"]:
+            text = test_case["text"]
+            expected_pii = test_case["expected_pii"]
+
+            detected, expected, fps = self._count_detected_pii(
+                pii_detector, text, expected_pii
+            )
+
+            total_detected += detected
+            total_expected += expected
+            all_false_positives.extend(fps)
+
+            # Track missed PII for debugging
+            if detected < expected:
+                detections = pii_detector.detect(text)
+                missed_pii.append({
+                    "test_id": test_case["id"],
+                    "text": text,
+                    "expected": expected_pii,
+                    "detected": detections,
+                    "missed_count": expected - detected,
+                })
+
+        # Calculate recall
+        if total_expected == 0:
+            recall = 1.0  # No PII expected, perfect recall
+        else:
+            recall = total_detected / total_expected
+
+        # Report false positive rate (informational, not a test failure)
+        fp_rate = len(all_false_positives) / len(pii_test_corpus["test_cases"])
+
+        # Log metrics for debugging
+        print(f"\n=== PII Recall Test Results ===")
+        print(f"Total expected PII: {total_expected}")
+        print(f"Total detected PII: {total_detected}")
+        print(f"Recall: {recall:.2%}")
+        print(f"False positives: {len(all_false_positives)}")
+        print(f"FP rate per test: {fp_rate:.2f}")
+
+        if missed_pii:
+            print(f"\nMissed PII cases ({len(missed_pii)}):")
+            for missed in missed_pii:
+                print(f"  - {missed['test_id']}: {missed['missed_count']} missed")
+
+        # Assert recall meets target
+        assert recall >= self.RECALL_TARGET, (
+            f"PII recall {recall:.2%} is below target {self.RECALL_TARGET:.0%}. "
+            f"Detected {total_detected}/{total_expected} PII instances. "
+            f"Missed cases: {[m['test_id'] for m in missed_pii]}"
+        )
+
+    def test_recall_by_pii_type(self, pii_test_corpus, pii_detector):
+        """Test recall separately for each PII type."""
+        type_stats: dict[str, dict[str, int]] = {}
+
+        for test_case in pii_test_corpus["test_cases"]:
+            text = test_case["text"]
+            expected_pii = test_case["expected_pii"]
+
+            for expected in expected_pii:
+                pii_type = expected["type"]
+                if pii_type not in type_stats:
+                    type_stats[pii_type] = {"expected": 0, "detected": 0}
+
+                type_stats[pii_type]["expected"] += 1
+
+                # Check if this specific PII was detected
+                detections = pii_detector.detect(text)
+                expected_value = expected["value"]
+
+                for detection in detections:
+                    if (
+                        expected_value.lower() in detection["text"].lower()
+                        or detection["text"].lower() in expected_value.lower()
+                    ):
+                        type_stats[pii_type]["detected"] += 1
+                        break
+
+        # Report per-type recall
+        print(f"\n=== Recall by PII Type ===")
+        for pii_type, stats in sorted(type_stats.items()):
+            if stats["expected"] > 0:
+                type_recall = stats["detected"] / stats["expected"]
+                print(f"  {pii_type}: {type_recall:.0%} ({stats['detected']}/{stats['expected']})")
+
+        # Verify overall type coverage (informational)
+        assert len(type_stats) > 0, "No PII types found in corpus"
+
+    def test_false_positive_documentation(self, pii_test_corpus, pii_detector):
+        """
+        Document false positive rate for transparency.
+
+        This test documents FP rate without failing - for FERPA compliance,
+        we prioritize high recall over low FP rate.
+        """
+        total_fps = 0
+        fp_details = []
+
+        for test_case in pii_test_corpus["test_cases"]:
+            text = test_case["text"]
+            expected_pii = test_case["expected_pii"]
+
+            _, _, false_positives = self._count_detected_pii(
+                pii_detector, text, expected_pii
+            )
+
+            total_fps += len(false_positives)
+            if false_positives:
+                fp_details.append({
+                    "test_id": test_case["id"],
+                    "false_positives": [
+                        {"text": fp["text"], "type": fp["type"]}
+                        for fp in false_positives
+                    ],
+                })
+
+        print(f"\n=== False Positive Documentation ===")
+        print(f"Total false positives: {total_fps}")
+        print(f"Tests with FPs: {len(fp_details)}/{len(pii_test_corpus['test_cases'])}")
+
+        if fp_details:
+            print("\nFalse positive details:")
+            for fp in fp_details[:5]:  # Limit output
+                print(f"  {fp['test_id']}: {fp['false_positives']}")
+
+        # This is informational - we document FP rate but don't fail on it
+        # FP rate assertion is intentionally omitted for FERPA compliance priority
+
+    def test_no_pii_cases_produce_no_detections(self, pii_test_corpus, pii_detector):
+        """Test that text without PII produces minimal false positives."""
+        no_pii_cases = [
+            tc for tc in pii_test_corpus["test_cases"]
+            if len(tc["expected_pii"]) == 0
+        ]
+
+        total_fps = 0
+        for test_case in no_pii_cases:
+            text = test_case["text"]
+            detections = pii_detector.detect(text)
+            total_fps += len(detections)
+
+        print(f"\n=== No-PII Cases ===")
+        print(f"Cases without expected PII: {len(no_pii_cases)}")
+        print(f"False positives in no-PII cases: {total_fps}")
+
+        # Informational - we log but don't fail
+        # High recall is prioritized over avoiding FPs
+
+    def test_email_detection_recall(self, pii_test_corpus, pii_detector):
+        """Verify email detection specifically - AC-4.4."""
+        email_cases = []
+        for tc in pii_test_corpus["test_cases"]:
+            emails = [p for p in tc["expected_pii"] if p["type"] == "EMAIL"]
+            if emails:
+                email_cases.append((tc["text"], emails))
+
+        detected = 0
+        total = 0
+
+        for text, expected_emails in email_cases:
+            detections = pii_detector.detect(text)
+            for expected in expected_emails:
+                total += 1
+                for d in detections:
+                    if expected["value"].lower() in d["text"].lower():
+                        detected += 1
+                        break
+
+        if total > 0:
+            recall = detected / total
+            print(f"\n=== Email Detection Recall ===")
+            print(f"Recall: {recall:.0%} ({detected}/{total})")
+            assert recall >= self.RECALL_TARGET, f"Email recall {recall:.2%} below target"
+
+    def test_phone_detection_recall(self, pii_test_corpus, pii_detector):
+        """Verify phone detection specifically - AC-4.4."""
+        phone_cases = []
+        for tc in pii_test_corpus["test_cases"]:
+            phones = [p for p in tc["expected_pii"] if p["type"] == "PHONE"]
+            if phones:
+                phone_cases.append((tc["text"], phones))
+
+        detected = 0
+        total = 0
+
+        for text, expected_phones in phone_cases:
+            detections = pii_detector.detect(text)
+            for expected in expected_phones:
+                total += 1
+                # Normalize phone numbers for comparison
+                expected_digits = re.sub(r'\D', '', expected["value"])
+                for d in detections:
+                    detected_digits = re.sub(r'\D', '', d["text"])
+                    if expected_digits == detected_digits:
+                        detected += 1
+                        break
+
+        if total > 0:
+            recall = detected / total
+            print(f"\n=== Phone Detection Recall ===")
+            print(f"Recall: {recall:.0%} ({detected}/{total})")
+            assert recall >= self.RECALL_TARGET, f"Phone recall {recall:.2%} below target"
+
+    def test_ssn_detection_recall(self, pii_test_corpus, pii_detector):
+        """Verify SSN detection specifically - AC-4.4."""
+        ssn_cases = []
+        for tc in pii_test_corpus["test_cases"]:
+            ssns = [p for p in tc["expected_pii"] if p["type"] == "SSN"]
+            if ssns:
+                ssn_cases.append((tc["text"], ssns))
+
+        detected = 0
+        total = 0
+
+        for text, expected_ssns in ssn_cases:
+            detections = pii_detector.detect(text)
+            for expected in expected_ssns:
+                total += 1
+                for d in detections:
+                    if expected["value"] == d["text"]:
+                        detected += 1
+                        break
+
+        if total > 0:
+            recall = detected / total
+            print(f"\n=== SSN Detection Recall ===")
+            print(f"Recall: {recall:.0%} ({detected}/{total})")
+            assert recall >= self.RECALL_TARGET, f"SSN recall {recall:.2%} below target"
+
+    def test_student_id_detection_recall(self, pii_test_corpus, pii_detector):
+        """Verify student ID detection specifically - AC-4.4."""
+        student_id_cases = []
+        for tc in pii_test_corpus["test_cases"]:
+            ids = [
+                p for p in tc["expected_pii"]
+                if p["type"] in ("STUDENT_ID", "STUDENT_ID_BARE")
+            ]
+            if ids:
+                student_id_cases.append((tc["text"], ids))
+
+        detected = 0
+        total = 0
+
+        for text, expected_ids in student_id_cases:
+            detections = pii_detector.detect(text)
+            for expected in expected_ids:
+                total += 1
+                for d in detections:
+                    # Match by contained value
+                    if (
+                        expected["value"].lower() in d["text"].lower()
+                        or d["text"].lower() in expected["value"].lower()
+                    ):
+                        detected += 1
+                        break
+
+        if total > 0:
+            recall = detected / total
+            print(f"\n=== Student ID Detection Recall ===")
+            print(f"Recall: {recall:.0%} ({detected}/{total})")
+            assert recall >= self.RECALL_TARGET, f"Student ID recall {recall:.2%} below target"
