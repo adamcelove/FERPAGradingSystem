@@ -2,9 +2,9 @@
 ANONYMIZED COMMENTS
 ======================================================================
 Original Document: Adam_Love_Interim_1 Comments 25-26.docx
-Generated: 2026-01-16 10:54:59
+Generated: 2026-01-16 11:08:57
 Total Comments: 50
-Total PII Instances Replaced: 293
+Total PII Instances Replaced: 250
 ======================================================================
 
 NOTE: All personally identifiable information (PII) has been replaced
@@ -13,35 +13,26 @@ with placeholder tokens like [PERSON_1], [DATE_TIME_2], etc.
 ----------------------------------------------------------------------
 STUDENT: Boyce, Will
 GRADE: B+
-PII Replaced: 6
+PII Replaced: 0
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-Will and I have gotten to know each other quickly over the course of [DATE_TIME_1]; being in the same group on Founders Day certainly helped cement a growing partnership that we seem to be developing. Our "secret" handshake is in its nascent stages of development and we have come to a greater understanding of what is and is not a productive contribution to the classroom. On his assessments Will had a slow start to [DATE_TIME_2], performing below his expectations on a few of the early assessments, but as [DATE_TIME_2] has progressed Will has seemed to get a better sense of what is expected of him in the class, performing well on his most recent assessment (92%) compared to his previous scores, (72%, 86%, 86%). I think that he is on a positive trajectory and I hope he will continue that trend.  Will reached out to come to meet with me after his assessment on Velocity claiming that "I had put the wrong equation on the test" I had offered for him to come in and discuss so that we could see what happened. As it turned out he had made a simple mistake that he saw as soon as we started reviewing his test. He had made the same mistake on a separate problem, but I do not take off points multiple times for the same mistake, so his grade was only affected by the first instance. Will has had moments where he has been seeking attention from his classmates in ways that are detrimental to the overall learning of the classroom. The good news is that despite some notable moments at [DATE_TIME_3], it seems that Will has begun a turn for the better as [DATE_TIME_2] has gone on. Will certainly has a talent for making his friends laugh. I hope that he will be able to utilize that power for good, finding the right moments to insert some levity rather than during moments requiring focus and attention from the class. I encourage Will to come meet with me outside of class again during our shared free block so that he can clear up any points of confusion before our next assessment rather than after. I really enjoy having Will in my class and I am looking forward to the rest of [DATE_TIME_2] together!
-
-REPLACEMENTS MADE:
-  - DATE_TIME: "the school year" → "[DATE_TIME_1]"
-  - DATE_TIME: "the year" → "[DATE_TIME_2]"
-  - DATE_TIME: "the year" → "[DATE_TIME_2]"
-  - DATE_TIME: "the start of the year" → "[DATE_TIME_3]"
-  - DATE_TIME: "the year" → "[DATE_TIME_2]"
-  - DATE_TIME: "the year" → "[DATE_TIME_2]"
+Will and I have gotten to know each other quickly over the course of the school year; being in the same group on Founders Day certainly helped cement a growing partnership that we seem to be developing. Our "secret" handshake is in its nascent stages of development and we have come to a greater understanding of what is and is not a productive contribution to the classroom. On his assessments Will had a slow start to the year, performing below his expectations on a few of the early assessments, but as the year has progressed Will has seemed to get a better sense of what is expected of him in the class, performing well on his most recent assessment (92%) compared to his previous scores, (72%, 86%, 86%). I think that he is on a positive trajectory and I hope he will continue that trend.  Will reached out to come to meet with me after his assessment on Velocity claiming that "I had put the wrong equation on the test" I had offered for him to come in and discuss so that we could see what happened. As it turned out he had made a simple mistake that he saw as soon as we started reviewing his test. He had made the same mistake on a separate problem, but I do not take off points multiple times for the same mistake, so his grade was only affected by the first instance. Will has had moments where he has been seeking attention from his classmates in ways that are detrimental to the overall learning of the classroom. The good news is that despite some notable moments at the start of the year, it seems that Will has begun a turn for the better as the year has gone on. Will certainly has a talent for making his friends laugh. I hope that he will be able to utilize that power for good, finding the right moments to insert some levity rather than during moments requiring focus and attention from the class. I encourage Will to come meet with me outside of class again during our shared free block so that he can clear up any points of confusion before our next assessment rather than after. I really enjoy having Will in my class and I am looking forward to the rest of the year together!
 
 
 ----------------------------------------------------------------------
 STUDENT: Coley, Brennan
 GRADE: A+
-PII Replaced: 7
+PII Replaced: 6
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-[PERSON_1] has been an outstanding member of our physics class. Already knowing [PERSON_1] from Cross country I know that he is an incredibly hard worker and committed to his own improvement. It does not come as any surprise that that same level of commitment would also translate into his academic work. [PERSON_1] has been an excellent participant in class, showing that he is paying close attention and applying the knowledge to his assessments. For [DATE_TIME_4] of class [PERSON_1] had a 100% and only recently broke his streak.   [PERSON_1] only missed some small details, mistaking a + for a - sign on his most recent assessment but the overall understanding that he has shown has been excellent throughout. I encourage [PERSON_1] to keep up the good work!
+[PERSON_1] has been an outstanding member of our physics class. Already knowing [PERSON_1] from Cross country I know that he is an incredibly hard worker and committed to his own improvement. It does not come as any surprise that that same level of commitment would also translate into his academic work. [PERSON_1] has been an excellent participant in class, showing that he is paying close attention and applying the knowledge to his assessments. For the first weeks of class [PERSON_1] had a 100% and only recently broke his streak.   [PERSON_1] only missed some small details, mistaking a + for a - sign on his most recent assessment but the overall understanding that he has shown has been excellent throughout. I encourage [PERSON_1] to keep up the good work!
 
 REPLACEMENTS MADE:
   - PERSON: "Brennan" → "[PERSON_1]"
   - PERSON: "Brennan" → "[PERSON_1]"
   - PERSON: "Brennan" → "[PERSON_1]"
-  - DATE_TIME: "the first weeks" → "[DATE_TIME_4]"
   - PERSON: "Brennan" → "[PERSON_1]"
   - PERSON: "Brennan" → "[PERSON_1]"
   - PERSON: "Brennan" → "[PERSON_1]"
@@ -63,16 +54,14 @@ REPLACEMENTS MADE:
 ----------------------------------------------------------------------
 STUDENT: Edmonds, Gavin
 GRADE: B+
-PII Replaced: 7
+PII Replaced: 5
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-[PERSON_3] had a bit of a slow start to [DATE_TIME_2] with his surgery and recovery causing him to miss school and then having to write with his hand in a sling. He has proved resilient and adaptable in the face of a challenging situation and was able to catch up despite [DATE_TIME_5] he missed at the start of school. When we met towards the beginning of the semester [PERSON_3] sometimes seemed surprised when asked to provide his thoughts or is asked to state what he thinks the next step would be. When homework was assigned that was practice for an upcoming assessment and based on the work that we had done in class, [PERSON_3] was surprised by the fact that "completion" of the assignment involved going back and getting correct answers (with multiple tries). "How am I supposed to figure this out?" [PERSON_3] commented, indicating some real frustration when it came to working independently. I am here to help him develop those skills he needs to “figure this out” on his own.  I really hope that he will take advantage of working with me in person again, as he may get more out of working one on one if he is still confused about how to approach the materials provided online. When he asked to meet with me towards the end of the first interim during our shared free block, he instead chose to go and try to work on his own and watch a video that I had posted that reviewed the topic. I am more than happy to clarify any confusion and help him work through any frustrations he may be having, he is not alone in his journey to understand the material! I look forward to the rest of the semester with [PERSON_3] and I hope that he knows that I am here to support him in any way that he needs.
+[PERSON_3] had a bit of a slow start to the year with his surgery and recovery causing him to miss school and then having to write with his hand in a sling. He has proved resilient and adaptable in the face of a challenging situation and was able to catch up despite the days he missed at the start of school. When we met towards the beginning of the semester [PERSON_3] sometimes seemed surprised when asked to provide his thoughts or is asked to state what he thinks the next step would be. When homework was assigned that was practice for an upcoming assessment and based on the work that we had done in class, [PERSON_3] was surprised by the fact that "completion" of the assignment involved going back and getting correct answers (with multiple tries). "How am I supposed to figure this out?" [PERSON_3] commented, indicating some real frustration when it came to working independently. I am here to help him develop those skills he needs to “figure this out” on his own.  I really hope that he will take advantage of working with me in person again, as he may get more out of working one on one if he is still confused about how to approach the materials provided online. When he asked to meet with me towards the end of the first interim during our shared free block, he instead chose to go and try to work on his own and watch a video that I had posted that reviewed the topic. I am more than happy to clarify any confusion and help him work through any frustrations he may be having, he is not alone in his journey to understand the material! I look forward to the rest of the semester with [PERSON_3] and I hope that he knows that I am here to support him in any way that he needs.
 
 REPLACEMENTS MADE:
   - PERSON: "Gavin" → "[PERSON_3]"
-  - DATE_TIME: "the year" → "[DATE_TIME_2]"
-  - DATE_TIME: "the days" → "[DATE_TIME_5]"
   - PERSON: "Gavin" → "[PERSON_3]"
   - PERSON: "Gavin" → "[PERSON_3]"
   - PERSON: "Gavin" → "[PERSON_3]"
@@ -117,11 +106,11 @@ REPLACEMENTS MADE:
 ----------------------------------------------------------------------
 STUDENT: Lamb, David
 GRADE: A
-PII Replaced: 9
+PII Replaced: 8
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-[PERSON_6] has had a strong first interim, showing good understanding throughout the interim and having a particularly strong showing on his last assessment. managing to solve the challenge problem at the end using a valid, albeit much longer method to extrapolate the motion of a speeding car beyond the given information. I encourage [PERSON_6] to continue to try creative solutions to problems and see how he can apply his math skills to more problems that we encounter. [PERSON_6] has done well to resist the distractions of peers around him, maintaining focus even while his peers may be seeking his attention. MacPhail, [PERSON_7] has been a solid member of the class, keeping up with assignments and reaching out to make sure that he has been keeping up with the current material. [PERSON_8] is great at asking questions during class time. His questions often show that he is thinking deeply, considering the work that we are doing and identifying a specific part that he is getting stuck at. [PERSON_8] has shown that he is getting the big picture on many of his assessments, the few points that he has missed often come from small details, applying a formula incorrectly, missing a sign or mistaking units. I encourage [PERSON_8] to try to ask the same good questions of his own work, going over his responses and asking himself if he has included all of the necessary details. I am looking forward to the remainder of [DATE_TIME_6] with [PERSON_8]!
+[PERSON_6] has had a strong first interim, showing good understanding throughout the interim and having a particularly strong showing on his last assessment. managing to solve the challenge problem at the end using a valid, albeit much longer method to extrapolate the motion of a speeding car beyond the given information. I encourage [PERSON_6] to continue to try creative solutions to problems and see how he can apply his math skills to more problems that we encounter. [PERSON_6] has done well to resist the distractions of peers around him, maintaining focus even while his peers may be seeking his attention. MacPhail, [PERSON_7] has been a solid member of the class, keeping up with assignments and reaching out to make sure that he has been keeping up with the current material. [PERSON_8] is great at asking questions during class time. His questions often show that he is thinking deeply, considering the work that we are doing and identifying a specific part that he is getting stuck at. [PERSON_8] has shown that he is getting the big picture on many of his assessments, the few points that he has missed often come from small details, applying a formula incorrectly, missing a sign or mistaking units. I encourage [PERSON_8] to try to ask the same good questions of his own work, going over his responses and asking himself if he has included all of the necessary details. I am looking forward to the remainder of the first semester with [PERSON_8]!
 
 REPLACEMENTS MADE:
   - PERSON: "David" → "[PERSON_6]"
@@ -131,7 +120,6 @@ REPLACEMENTS MADE:
   - PERSON: "Jake" → "[PERSON_8]"
   - PERSON: "Jake" → "[PERSON_8]"
   - PERSON: "Jake" → "[PERSON_8]"
-  - DATE_TIME: "the first semester" → "[DATE_TIME_6]"
   - PERSON: "Jake" → "[PERSON_8]"
 
 
@@ -160,15 +148,14 @@ REPLACEMENTS MADE:
 ----------------------------------------------------------------------
 STUDENT: Perko, Sebastian
 GRADE: B
-PII Replaced: 8
+PII Replaced: 7
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-[PERSON_10] made a good effort to make up a lab that he had missed at the start of the interim, making an appointment to come outside of class to gather his data, make the necessary measurements and write up his report after missing school for [DATE_TIME_7]. [PERSON_10] struggled on his most recent assessment on acceleration, showing some weakness on the graphing portion as well as with definitions that were reviewed in the prior class. [PERSON_10] has seemed confused during portions of class at least from his expressions but rarely asks a question for clarification. I encourage [PERSON_10] to ask more questions during class when he is confused and to reach out for help outside of class when he is feeling persistent confusion. I am always available to meet the opposite lunch. [PERSON_10] has at times struggled with staying focused during class time often leaning back in his chair rather than taking notes or practicing the skill we are investigating. I encourage [PERSON_10] to "lean in" both literally and figuratively in class so that he doesn't miss important details. I hope that [PERSON_10] and I can continue to partner in his development.
+[PERSON_10] made a good effort to make up a lab that he had missed at the start of the interim, making an appointment to come outside of class to gather his data, make the necessary measurements and write up his report after missing school for a few days. [PERSON_10] struggled on his most recent assessment on acceleration, showing some weakness on the graphing portion as well as with definitions that were reviewed in the prior class. [PERSON_10] has seemed confused during portions of class at least from his expressions but rarely asks a question for clarification. I encourage [PERSON_10] to ask more questions during class when he is confused and to reach out for help outside of class when he is feeling persistent confusion. I am always available to meet the opposite lunch. [PERSON_10] has at times struggled with staying focused during class time often leaning back in his chair rather than taking notes or practicing the skill we are investigating. I encourage [PERSON_10] to "lean in" both literally and figuratively in class so that he doesn't miss important details. I hope that [PERSON_10] and I can continue to partner in his development.
 
 REPLACEMENTS MADE:
   - PERSON: "Sebastian" → "[PERSON_10]"
-  - DATE_TIME: "a few days" → "[DATE_TIME_7]"
   - PERSON: "Sebastian" → "[PERSON_10]"
   - PERSON: "Sebastian" → "[PERSON_10]"
   - PERSON: "Sebastian" → "[PERSON_10]"
@@ -180,11 +167,11 @@ REPLACEMENTS MADE:
 ----------------------------------------------------------------------
 STUDENT: Samuel, Landon
 GRADE: B-
-PII Replaced: 11
+PII Replaced: 10
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-[PERSON_11] has been a positive member of the classroom aside from a few chuckles at inappropriate times and trying to draw the attention of friends from across the room [PERSON_11] has been an engaged member of the classroom. When [PERSON_11] gets down to work he works with focus and purpose. Outside of class [PERSON_11] is easy to talk to and get along with. [PERSON_11] has struggled a fair bit on his assessments, having trouble applying many of the skills of the class. On his most recent assessment [PERSON_11] was asked about features on a specific graph and what they represented. [PERSON_11] gave general responses that were true for a graph in general but were not applicable to the specific graph that we had been working with for [DATE_TIME_8] showing that he was perhaps missing an important connection between describing the motion of an object and how it connects to the features of the graph of that same motion. I hope that [PERSON_11] will reach out to make a meeting with me to review concepts that he is struggling with. I know that [PERSON_11] is a capable student and that he is working hard to improve. I am here to help meet whatever goals [PERSON_11] has for his performance in the class.
+[PERSON_11] has been a positive member of the classroom aside from a few chuckles at inappropriate times and trying to draw the attention of friends from across the room [PERSON_11] has been an engaged member of the classroom. When [PERSON_11] gets down to work he works with focus and purpose. Outside of class [PERSON_11] is easy to talk to and get along with. [PERSON_11] has struggled a fair bit on his assessments, having trouble applying many of the skills of the class. On his most recent assessment [PERSON_11] was asked about features on a specific graph and what they represented. [PERSON_11] gave general responses that were true for a graph in general but were not applicable to the specific graph that we had been working with for the past few weeks showing that he was perhaps missing an important connection between describing the motion of an object and how it connects to the features of the graph of that same motion. I hope that [PERSON_11] will reach out to make a meeting with me to review concepts that he is struggling with. I know that [PERSON_11] is a capable student and that he is working hard to improve. I am here to help meet whatever goals [PERSON_11] has for his performance in the class.
 
 REPLACEMENTS MADE:
   - PERSON: "Landon" → "[PERSON_11]"
@@ -194,7 +181,6 @@ REPLACEMENTS MADE:
   - PERSON: "Landon" → "[PERSON_11]"
   - PERSON: "Landon" → "[PERSON_11]"
   - PERSON: "Landon" → "[PERSON_11]"
-  - DATE_TIME: "the past few weeks" → "[DATE_TIME_8]"
   - PERSON: "Landon" → "[PERSON_11]"
   - PERSON: "Landon" → "[PERSON_11]"
   - PERSON: "Landon" → "[PERSON_11]"
@@ -213,38 +199,33 @@ I have really enjoy having TJ in my class, he is a wonderful presence in the roo
 ----------------------------------------------------------------------
 STUDENT: Vaidya, Dylan
 GRADE: A
-PII Replaced: 7
+PII Replaced: 5
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-[PERSON_12] has been a committed from [DATE_TIME_3]. [PERSON_12] stated that he intended to approach all of his classes with focus and hard work applying himself fully to his studies from the start. [PERSON_12] has certainly backed up his words with action. Staying focused during class work time, showing good preparation during assessments, writing out his work completely, writing detailed and specific responses to questions, and checking over his work before handing anything in. [PERSON_12]'s only points of improvement lie in becoming distracted at times by his peers, sometimes laughing along with a joke provided by his classmates but he is quick to refocus when reminded. I hope to see more evidence of [PERSON_12]’s commitment to excellence [DATE_TIME_9]!
+[PERSON_12] has been a committed from the start of the year. [PERSON_12] stated that he intended to approach all of his classes with focus and hard work applying himself fully to his studies from the start. [PERSON_12] has certainly backed up his words with action. Staying focused during class work time, showing good preparation during assessments, writing out his work completely, writing detailed and specific responses to questions, and checking over his work before handing anything in. [PERSON_12]'s only points of improvement lie in becoming distracted at times by his peers, sometimes laughing along with a joke provided by his classmates but he is quick to refocus when reminded. I hope to see more evidence of [PERSON_12]’s commitment to excellence this year!
 
 REPLACEMENTS MADE:
   - PERSON: "Dylan" → "[PERSON_12]"
-  - DATE_TIME: "the start of the year" → "[DATE_TIME_3]"
   - PERSON: "Dylan" → "[PERSON_12]"
   - PERSON: "Dylan" → "[PERSON_12]"
   - PERSON: "Dylan" → "[PERSON_12]"
   - PERSON: "Dylan" → "[PERSON_12]"
-  - DATE_TIME: "this year" → "[DATE_TIME_9]"
 
 
 ----------------------------------------------------------------------
 STUDENT: Voinovich, Nate
 GRADE: A-
-PII Replaced: 10
+PII Replaced: 7
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-It has been great to get to know [PERSON_13] over the course of [DATE_TIME_2]. Sitting at the seat closest to my desk has allowed us to check in more often. [PERSON_13] had asked me at [DATE_TIME_3] to share [SCHOOL_NAME_1] football highlight tape, something that his brother had shared that I had placed in my midterm study materials in [DATE_TIME_10]. I am sure that patience will pay off for [PERSON_13] in this respect. Academically [PERSON_13] has shown good preparation for his assessments, showing a bit of a dip in performance on his assessments but ended the interim with a perfect score on one of the most challenging assessments of the interim. I hope that [PERSON_13] continues with his strong performances and with his excellent work discussing problems with his neighbors. In overhearing some of his conversations with his partner, [PERSON_13] is always open-minded and willing to change his mind if he is able to see the value behind his partner's argument.
+It has been great to get to know [PERSON_13] over the course of the year. Sitting at the seat closest to my desk has allowed us to check in more often. [PERSON_13] had asked me at the start of the year to share [SCHOOL_NAME_1] football highlight tape, something that his brother had shared that I had placed in my midterm study materials in previous years. I am sure that patience will pay off for [PERSON_13] in this respect. Academically [PERSON_13] has shown good preparation for his assessments, showing a bit of a dip in performance on his assessments but ended the interim with a perfect score on one of the most challenging assessments of the interim. I hope that [PERSON_13] continues with his strong performances and with his excellent work discussing problems with his neighbors. In overhearing some of his conversations with his partner, [PERSON_13] is always open-minded and willing to change his mind if he is able to see the value behind his partner's argument.
 
 REPLACEMENTS MADE:
   - PERSON: "Nate" → "[PERSON_13]"
-  - DATE_TIME: "the year" → "[DATE_TIME_2]"
   - PERSON: "Nate" → "[PERSON_13]"
-  - DATE_TIME: "the start of the year" → "[DATE_TIME_3]"
   - SCHOOL_NAME: "my high school" → "[SCHOOL_NAME_1]"
-  - DATE_TIME: "previous years" → "[DATE_TIME_10]"
   - PERSON: "Nate" → "[PERSON_13]"
   - PERSON: "Nate" → "[PERSON_13]"
   - PERSON: "Nate" → "[PERSON_13]"
@@ -288,22 +269,20 @@ REPLACEMENTS MADE:
 ----------------------------------------------------------------------
 STUDENT: Bebenroth, Burke
 GRADE: A-
-PII Replaced: 10
+PII Replaced: 8
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-[PERSON_16] is attentive, ready to learn [DATE_TIME_11], and has a bright positive personality. During class time [PERSON_16] is a great participant in classroom discussions, always contributing when he has an insight to share. I encourage [PERSON_16] to continue to keep up with practice work and work outside of the classroom. [PERSON_16] has done well on assessments overall but will miss small details, he could address those small gaps in knowledge with additional review of his notes outside of the class, and more careful reading of the textbook. He can be distracted at times by his neighbors, engaging in some side conversations but is quick to correct when he is reminded. [PERSON_16] has also needed some reminders to turn in work or to take a missed assessment. I encourage [PERSON_16] to be proactive, check myUS for any missing assignments. I was happy that I was able to observe [PERSON_16] diving [DATE_TIME_12] when the cross country team was training in the pool. I hope that [PERSON_16] will bring some of his diving experience to the class, especially when we discuss rotation and projectile motion.
+[PERSON_16] is attentive, ready to learn every day, and has a bright positive personality. During class time [PERSON_16] is a great participant in classroom discussions, always contributing when he has an insight to share. I encourage [PERSON_16] to continue to keep up with practice work and work outside of the classroom. [PERSON_16] has done well on assessments overall but will miss small details, he could address those small gaps in knowledge with additional review of his notes outside of the class, and more careful reading of the textbook. He can be distracted at times by his neighbors, engaging in some side conversations but is quick to correct when he is reminded. [PERSON_16] has also needed some reminders to turn in work or to take a missed assessment. I encourage [PERSON_16] to be proactive, check myUS for any missing assignments. I was happy that I was able to observe [PERSON_16] diving one day when the cross country team was training in the pool. I hope that [PERSON_16] will bring some of his diving experience to the class, especially when we discuss rotation and projectile motion.
 
 REPLACEMENTS MADE:
   - PERSON: "Burke" → "[PERSON_16]"
-  - DATE_TIME: "every day" → "[DATE_TIME_11]"
   - PERSON: "Burke" → "[PERSON_16]"
   - PERSON: "Burke" → "[PERSON_16]"
   - PERSON: "Burke" → "[PERSON_16]"
   - PERSON: "Burke" → "[PERSON_16]"
   - PERSON: "Burke" → "[PERSON_16]"
   - PERSON: "Burke" → "[PERSON_16]"
-  - DATE_TIME: "one day" → "[DATE_TIME_12]"
   - PERSON: "Burke" → "[PERSON_16]"
 
 
@@ -429,18 +408,16 @@ REPLACEMENTS MADE:
 ----------------------------------------------------------------------
 STUDENT: Richer, Blake
 GRADE: B+
-PII Replaced: 7
+PII Replaced: 5
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-[PERSON_23] has been inconsistent this interim; at times he is focused and ready to learn, asking good questions during classroom discussions, working persistently and collaboratively and constructively with his peers. There are other times where [PERSON_23] struggles to maintain his composure, making faces at his classmates at inappropriate times, engaging in side conversations and distracting himself and others with anything but the work of the classroom. I encourage [PERSON_23] to consider his classmates as well as his own learning in [DATE_TIME_13] and try to reflect on how he can better serve his learning as well as that of his classmates, particularly in [DATE_TIME_14] when these issues seem more present. I was encouraged that [PERSON_23] sought me out to discuss some material outside of class and I hope that [PERSON_23] will continue to reach out for help before assessments.
+[PERSON_23] has been inconsistent this interim; at times he is focused and ready to learn, asking good questions during classroom discussions, working persistently and collaboratively and constructively with his peers. There are other times where [PERSON_23] struggles to maintain his composure, making faces at his classmates at inappropriate times, engaging in side conversations and distracting himself and others with anything but the work of the classroom. I encourage [PERSON_23] to consider his classmates as well as his own learning in the coming months and try to reflect on how he can better serve his learning as well as that of his classmates, particularly in the late afternoon when these issues seem more present. I was encouraged that [PERSON_23] sought me out to discuss some material outside of class and I hope that [PERSON_23] will continue to reach out for help before assessments.
 
 REPLACEMENTS MADE:
   - PERSON: "Blake" → "[PERSON_23]"
   - PERSON: "Blake" → "[PERSON_23]"
   - PERSON: "Blake" → "[PERSON_23]"
-  - DATE_TIME: "the coming months" → "[DATE_TIME_13]"
-  - DATE_TIME: "the late afternoon" → "[DATE_TIME_14]"
   - PERSON: "Blake" → "[PERSON_23]"
   - PERSON: "Blake" → "[PERSON_23]"
 
@@ -464,19 +441,17 @@ REPLACEMENTS MADE:
 ----------------------------------------------------------------------
 STUDENT: Strom, Asher
 GRADE: A
-PII Replaced: 9
+PII Replaced: 7
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-Having known [PERSON_25] from cross country for [DATE_TIME_15] he is no stranger to me. [PERSON_25] has had a strong interim overall, and while he missed some time due to illness he was quick to catch up. [PERSON_25] has shown good ability to perform on assessments but will often miss details in his work, forgetting a type of force or the direction that force goes in. [PERSON_25] seems to be content to sit back during class time and absorb material for himself, rarely discussing his work with his partner for [DATE_TIME_16], taking the time to sit back rather than taking time to offer an explanation or asking a question of his partner. I encourage [PERSON_25] to take some time to go a bit further and try to explain his thinking more fully during partner work as he is missing an opportunity both to solidify his own knowledge but also to lend a hand to his classmate and share his understanding. [PERSON_25] has lately seemed determined to use all of the stuff in the classroom for creative purposes, making constructions out of test dividers, using meter sticks instead of rulers for line drawing in a notebook. I encourage [PERSON_25] to refocus on the task of being a student and focus on how he is engaging with his peers in the classroom constructively during group work times as well as during whole group discussions.
+Having known [PERSON_25] from cross country for the past 2 years he is no stranger to me. [PERSON_25] has had a strong interim overall, and while he missed some time due to illness he was quick to catch up. [PERSON_25] has shown good ability to perform on assessments but will often miss details in his work, forgetting a type of force or the direction that force goes in. [PERSON_25] seems to be content to sit back during class time and absorb material for himself, rarely discussing his work with his partner for more than a minute, taking the time to sit back rather than taking time to offer an explanation or asking a question of his partner. I encourage [PERSON_25] to take some time to go a bit further and try to explain his thinking more fully during partner work as he is missing an opportunity both to solidify his own knowledge but also to lend a hand to his classmate and share his understanding. [PERSON_25] has lately seemed determined to use all of the stuff in the classroom for creative purposes, making constructions out of test dividers, using meter sticks instead of rulers for line drawing in a notebook. I encourage [PERSON_25] to refocus on the task of being a student and focus on how he is engaging with his peers in the classroom constructively during group work times as well as during whole group discussions.
 
 REPLACEMENTS MADE:
   - PERSON: "Asher" → "[PERSON_25]"
-  - DATE_TIME: "the past 2 years" → "[DATE_TIME_15]"
   - PERSON: "Asher" → "[PERSON_25]"
   - PERSON: "Asher" → "[PERSON_25]"
   - PERSON: "Asher" → "[PERSON_25]"
-  - DATE_TIME: "more than a minute" → "[DATE_TIME_16]"
   - PERSON: "Asher" → "[PERSON_25]"
   - PERSON: "Asher" → "[PERSON_25]"
   - PERSON: "Asher" → "[PERSON_25]"
@@ -502,18 +477,17 @@ REPLACEMENTS MADE:
 ----------------------------------------------------------------------
 STUDENT: Castro, Enzo
 GRADE: A
-PII Replaced: 6
+PII Replaced: 5
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-I really like having [PERSON_27] in my class. [PERSON_27] is diligent in his work, open to suggestions and is capable of working through some of the challenging problems of our class, not giving up when getting stuck and not afraid to ask for help when he has reached a dead end. [PERSON_27] has lost most of his points on assessments to small errors; he usually has a good sense of the overall problem but misses a key detail when showing his work. I expect that [PERSON_27] will be able to look at his previous work on assessment to make any adjustments that he needs to fix those small details that pop up occasionally. I look forward to a great rest of [DATE_TIME_2] with [PERSON_27]!
+I really like having [PERSON_27] in my class. [PERSON_27] is diligent in his work, open to suggestions and is capable of working through some of the challenging problems of our class, not giving up when getting stuck and not afraid to ask for help when he has reached a dead end. [PERSON_27] has lost most of his points on assessments to small errors; he usually has a good sense of the overall problem but misses a key detail when showing his work. I expect that [PERSON_27] will be able to look at his previous work on assessment to make any adjustments that he needs to fix those small details that pop up occasionally. I look forward to a great rest of the year with [PERSON_27]!
 
 REPLACEMENTS MADE:
   - PERSON: "Enzo" → "[PERSON_27]"
   - PERSON: "Enzo" → "[PERSON_27]"
   - PERSON: "Enzo" → "[PERSON_27]"
   - PERSON: "Enzo" → "[PERSON_27]"
-  - DATE_TIME: "the year" → "[DATE_TIME_2]"
   - PERSON: "Enzo" → "[PERSON_27]"
 
 
@@ -533,11 +507,11 @@ REPLACEMENTS MADE:
 ----------------------------------------------------------------------
 STUDENT: Haas, Rowan
 GRADE: B+
-PII Replaced: 7
+PII Replaced: 6
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-[PERSON_28] has had a bit of a rollercoaster of a first interim. [PERSON_28] started out with low confidence, constantly getting down on himself and making it clear that he wasn't going to be able to get it with his comments. After our second assessment I had asked the class to reflect on their preparation and gave suggestions for what to try to do for the upcoming assessments. In asking [PERSON_28] what he was willing to do to achieve his goals, [PERSON_28] replied with "anything". [PERSON_28] has followed up on his promise to himself. His most recent assessment showed that he had prepared well, taken the suggestions offered and applied them, leading to work that was clear, accurate, and showed that he was understanding the material at a much higher level than he had on previous assessments. I encourage [PERSON_28] to keep up the good work and continue to apply the habits that Rowan has formed over [DATE_TIME_17] will help him immensely as we begin our journey into more challenging topics of forces, momentum and energy.
+[PERSON_28] has had a bit of a rollercoaster of a first interim. [PERSON_28] started out with low confidence, constantly getting down on himself and making it clear that he wasn't going to be able to get it with his comments. After our second assessment I had asked the class to reflect on their preparation and gave suggestions for what to try to do for the upcoming assessments. In asking [PERSON_28] what he was willing to do to achieve his goals, [PERSON_28] replied with "anything". [PERSON_28] has followed up on his promise to himself. His most recent assessment showed that he had prepared well, taken the suggestions offered and applied them, leading to work that was clear, accurate, and showed that he was understanding the material at a much higher level than he had on previous assessments. I encourage [PERSON_28] to keep up the good work and continue to apply the habits that Rowan has formed over these past weeks will help him immensely as we begin our journey into more challenging topics of forces, momentum and energy.
 
 REPLACEMENTS MADE:
   - PERSON: "Rowan" → "[PERSON_28]"
@@ -546,7 +520,6 @@ REPLACEMENTS MADE:
   - PERSON: "Rowan" → "[PERSON_28]"
   - PERSON: "Rowan" → "[PERSON_28]"
   - PERSON: "Rowan" → "[PERSON_28]"
-  - DATE_TIME: "these past weeks" → "[DATE_TIME_17]"
 
 
 ----------------------------------------------------------------------
@@ -567,15 +540,11 @@ REPLACEMENTS MADE:
 ----------------------------------------------------------------------
 STUDENT: Kasubick, Phin
 GRADE: B+
-PII Replaced: 2
+PII Replaced: 0
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-Phin has had a bit of a rollercoaster start to the interim. Phin started [DATE_TIME_2] with some disappointing scores on his first two assessments (85% and 81%) but showed some significant improvement on his most recent assessment (90%). After his second assessment, Phin committed to taking advantage of the opportunities for physics practice provided on the topics page of the class website. He completed some of the review on his own and then met with me to review some of the problems that he found challenging. His continued practice and review outside of class has shown good results and I encourage Phin to continue to apply the strategies that he has developed in review for [DATE_TIME_8]. Phin has seemed to become more comfortable with the processes of the class and grown in confidence as he has begun to find out how to practice effectively outside of class. I look forward to the coming semester and I encourage Phin to continue to reach out to me as the year progresses to review any material that he needs clarification on.
-
-REPLACEMENTS MADE:
-  - DATE_TIME: "the year" → "[DATE_TIME_2]"
-  - DATE_TIME: "the past few weeks" → "[DATE_TIME_8]"
+Phin has had a bit of a rollercoaster start to the interim. Phin started the year with some disappointing scores on his first two assessments (85% and 81%) but showed some significant improvement on his most recent assessment (90%). After his second assessment, Phin committed to taking advantage of the opportunities for physics practice provided on the topics page of the class website. He completed some of the review on his own and then met with me to review some of the problems that he found challenging. His continued practice and review outside of class has shown good results and I encourage Phin to continue to apply the strategies that he has developed in review for the past few weeks. Phin has seemed to become more comfortable with the processes of the class and grown in confidence as he has begun to find out how to practice effectively outside of class. I look forward to the coming semester and I encourage Phin to continue to reach out to me as the year progresses to review any material that he needs clarification on.
 
 
 ----------------------------------------------------------------------
@@ -612,17 +581,16 @@ REPLACEMENTS MADE:
 ----------------------------------------------------------------------
 STUDENT: Quigley, Griffin
 GRADE: A+
-PII Replaced: 4
+PII Replaced: 3
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-[PERSON_33] is wonderful to have in class. [PERSON_33] is interested, committed and genuinely trying to understand the material at a deeper level. He is helpful to his classmates when they are stuck and he is always willing to participate in class. A particular moment of note was when he presented in front of the class during a group discussion, choosing to go to the whiteboard to draw his graph rather than just explain from his seat, not only making it easier for the class to understand his thought process but also proving [PERSON_33]'s skill and confidence in his physics work. Looking forward to a great rest of [DATE_TIME_2].
+[PERSON_33] is wonderful to have in class. [PERSON_33] is interested, committed and genuinely trying to understand the material at a deeper level. He is helpful to his classmates when they are stuck and he is always willing to participate in class. A particular moment of note was when he presented in front of the class during a group discussion, choosing to go to the whiteboard to draw his graph rather than just explain from his seat, not only making it easier for the class to understand his thought process but also proving [PERSON_33]'s skill and confidence in his physics work. Looking forward to a great rest of the year.
 
 REPLACEMENTS MADE:
   - PERSON: "Griffin" → "[PERSON_33]"
   - PERSON: "Griffin" → "[PERSON_33]"
   - PERSON: "Griffin" → "[PERSON_33]"
-  - DATE_TIME: "the year" → "[DATE_TIME_2]"
 
 
 ----------------------------------------------------------------------
@@ -662,39 +630,34 @@ REPLACEMENTS MADE:
 ----------------------------------------------------------------------
 STUDENT: Stephans, Doug
 GRADE: A-
-PII Replaced: 9
+PII Replaced: 6
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-[PERSON_36] is such a positive member of the class. [PERSON_36] comes [DATE_TIME_11] ready to learn, ready to participate, and ready to push through a challenge. [PERSON_36] has gone through some ups and downs in the class, had some challenges early on in [DATE_TIME_2] with showing his work effectively on assessments, but [PERSON_36] has been proactive in reaching out for help as well as following suggestions offered to him. I encourage [PERSON_36] to keep up the good work that he has been doing recently, continue to practice outside of class and draw upon the resources of the class, referring to the topics page for practice problems and solutions, watching the shared Loom videos with complete problems being solved, and reaching out to me for help outside of class. I look forward to a great rest of [DATE_TIME_2] with [PERSON_36]!
+[PERSON_36] is such a positive member of the class. [PERSON_36] comes every day ready to learn, ready to participate, and ready to push through a challenge. [PERSON_36] has gone through some ups and downs in the class, had some challenges early on in the year with showing his work effectively on assessments, but [PERSON_36] has been proactive in reaching out for help as well as following suggestions offered to him. I encourage [PERSON_36] to keep up the good work that he has been doing recently, continue to practice outside of class and draw upon the resources of the class, referring to the topics page for practice problems and solutions, watching the shared Loom videos with complete problems being solved, and reaching out to me for help outside of class. I look forward to a great rest of the year with [PERSON_36]!
 
 REPLACEMENTS MADE:
   - PERSON: "Doug" → "[PERSON_36]"
   - PERSON: "Doug" → "[PERSON_36]"
-  - DATE_TIME: "every day" → "[DATE_TIME_11]"
-  - PERSON: "Doug" → "[PERSON_36]"
-  - DATE_TIME: "the year" → "[DATE_TIME_2]"
   - PERSON: "Doug" → "[PERSON_36]"
   - PERSON: "Doug" → "[PERSON_36]"
-  - DATE_TIME: "the year" → "[DATE_TIME_2]"
+  - PERSON: "Doug" → "[PERSON_36]"
   - PERSON: "Doug" → "[PERSON_36]"
 
 
 ----------------------------------------------------------------------
 STUDENT: White, Kengston
 GRADE: B
-PII Replaced: 6
+PII Replaced: 4
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-Kengston is a wonderful member of the class. He comes to class attentive and ready to learn, he is always willing to take suggestions and has a consistent work ethic, working hard outside of class as well as in. [PERSON_37] came to me after his most recent test and expressed some concerns about his standing in the class and the lack of confidence that he felt after the most recent assessment. We spoke at length about the difference between "natural ability" and "experience" when discussing how he felt relative to the other students in the class. I encourage [PERSON_37] to focus on listening and trying to understand, rather than comparing himself to others. If it seems like others are explaining a concept easily, that is a great opportunity to try and understand what they understand. Everyone has to traverse the gap between not understanding and understanding, but the more we focus on the frustration, the "I am not getting it" or the "natural ability" of those around us the more that we miss the fact that much of what may appear as "natural ability" is just an expression of understanding that was gained from past experience wrestling with the concepts we are investigating. I encourage [PERSON_37] to come and meet with me during our shared free block (G-Block in the Library) in [DATE_TIME_13] so that we can review recent material, look ahead to coming topics, and review past knowledge. I look forward to [DATE_TIME_18], and I hope that [PERSON_37] will reach out for help when he needs it. He is not alone in his journey! I am here to help, and he has resources available to him!
+Kengston is a wonderful member of the class. He comes to class attentive and ready to learn, he is always willing to take suggestions and has a consistent work ethic, working hard outside of class as well as in. [PERSON_37] came to me after his most recent test and expressed some concerns about his standing in the class and the lack of confidence that he felt after the most recent assessment. We spoke at length about the difference between "natural ability" and "experience" when discussing how he felt relative to the other students in the class. I encourage [PERSON_37] to focus on listening and trying to understand, rather than comparing himself to others. If it seems like others are explaining a concept easily, that is a great opportunity to try and understand what they understand. Everyone has to traverse the gap between not understanding and understanding, but the more we focus on the frustration, the "I am not getting it" or the "natural ability" of those around us the more that we miss the fact that much of what may appear as "natural ability" is just an expression of understanding that was gained from past experience wrestling with the concepts we are investigating. I encourage [PERSON_37] to come and meet with me during our shared free block (G-Block in the Library) in the coming months so that we can review recent material, look ahead to coming topics, and review past knowledge. I look forward to the end of the semester, and I hope that [PERSON_37] will reach out for help when he needs it. He is not alone in his journey! I am here to help, and he has resources available to him!
 
 REPLACEMENTS MADE:
   - PERSON: "Kengston" → "[PERSON_37]"
   - PERSON: "Kengston" → "[PERSON_37]"
   - PERSON: "Kengston" → "[PERSON_37]"
-  - DATE_TIME: "the coming months" → "[DATE_TIME_13]"
-  - DATE_TIME: "the end of the semester" → "[DATE_TIME_18]"
   - PERSON: "Kengston" → "[PERSON_37]"
 
 
@@ -748,16 +711,15 @@ Nathan has been an excellent student this first interim; he comes to class prepa
 ----------------------------------------------------------------------
 STUDENT: Gulati, Kartik
 GRADE: B-
-PII Replaced: 9
+PII Replaced: 8
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-It has been interesting seeing [PERSON_41] firsthand as a student after only hearing second hand about his experiences in the classroom through his other teachers' comments as his sponsor. [PERSON_41] has had some ups and downs this interim, he started out [DATE_TIME_2] with a 16.5/20(82.5%), followed by a 45/55 (81.8%) on his constant velocity assessment and finished with a 32.5/40 (81.3%) on his free fall and vectors assessment. [PERSON_41] has at times needed some reminders about staying on task, especially during group problem solving where students are given a bit more freedom. [PERSON_41] has found himself getting involved in side conversations, allowing himself to get sidetracked during the times where he can find out what he may not be understanding as fully as he needs to. Additionally there have been a few classes where [PERSON_41] seems to be having trouble staying awake during class. I encourage [PERSON_41] to again focus on getting good sleep so that he can stay attentive and engaged during class time. [PERSON_41] would benefit from regular practice outside of class problem solving, reading through the textbook, taking and reviewing notes, as well as reaching out to meet with me (it's pretty easy to set up a meeting with me at the lunch table). I am here to help [PERSON_41] achieve whatever his goals are in Honors Physics!
+It has been interesting seeing [PERSON_41] firsthand as a student after only hearing second hand about his experiences in the classroom through his other teachers' comments as his sponsor. [PERSON_41] has had some ups and downs this interim, he started out the year with a 16.5/20(82.5%), followed by a 45/55 (81.8%) on his constant velocity assessment and finished with a 32.5/40 (81.3%) on his free fall and vectors assessment. [PERSON_41] has at times needed some reminders about staying on task, especially during group problem solving where students are given a bit more freedom. [PERSON_41] has found himself getting involved in side conversations, allowing himself to get sidetracked during the times where he can find out what he may not be understanding as fully as he needs to. Additionally there have been a few classes where [PERSON_41] seems to be having trouble staying awake during class. I encourage [PERSON_41] to again focus on getting good sleep so that he can stay attentive and engaged during class time. [PERSON_41] would benefit from regular practice outside of class problem solving, reading through the textbook, taking and reviewing notes, as well as reaching out to meet with me (it's pretty easy to set up a meeting with me at the lunch table). I am here to help [PERSON_41] achieve whatever his goals are in Honors Physics!
 
 REPLACEMENTS MADE:
   - PERSON: "Kartik" → "[PERSON_41]"
   - PERSON: "Kartik" → "[PERSON_41]"
-  - DATE_TIME: "the year" → "[DATE_TIME_2]"
   - PERSON: "Kartik" → "[PERSON_41]"
   - PERSON: "Kartik" → "[PERSON_41]"
   - PERSON: "Kartik" → "[PERSON_41]"
@@ -769,11 +731,11 @@ REPLACEMENTS MADE:
 ----------------------------------------------------------------------
 STUDENT: Iskra, Anton
 GRADE: A+
-PII Replaced: 7
+PII Replaced: 5
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-[PERSON_42] has been an excellent part of the Honors Physics classroom. [PERSON_42] has seemed to come alive a bit more in class recently when we started investigating some more challenging problems that have ranges of solutions. [PERSON_42] started building models using both problem solving on paper and then using [PERSON_31] to create a computer model of the system to see how the system responded to changes in the various inputs. I hope that [PERSON_42] will continue to follow this practice, applying the same modeling techniques to the new tools that we will be developing over [DATE_TIME_13], using Forces, Energy, and momentum to model the behavior of more complex systems. Khot, Nishanth - INC Nishanth had a bit of a slow start to [DATE_TIME_2].  He seemed hesitant to apply himself fully to the tasks of the class choosing to sit back rather than move ahead with writing out his work.  When asked about his thought process Nishanth often had interesting and inventive ways of approaching problems, showing good intuition about how the mathematics could be applied to the systems we were investigating.  On assessments Nishanth took only two of the three large assessments scoring a 18/20 and a 45/55.  I hope to see more of Nishanth getting his good thought on to the page and applying his good mathematical and analytical skills to the upcoming semester!
+[PERSON_42] has been an excellent part of the Honors Physics classroom. [PERSON_42] has seemed to come alive a bit more in class recently when we started investigating some more challenging problems that have ranges of solutions. [PERSON_42] started building models using both problem solving on paper and then using [PERSON_31] to create a computer model of the system to see how the system responded to changes in the various inputs. I hope that [PERSON_42] will continue to follow this practice, applying the same modeling techniques to the new tools that we will be developing over the coming months, using Forces, Energy, and momentum to model the behavior of more complex systems. Khot, Nishanth - INC Nishanth had a bit of a slow start to the year.  He seemed hesitant to apply himself fully to the tasks of the class choosing to sit back rather than move ahead with writing out his work.  When asked about his thought process Nishanth often had interesting and inventive ways of approaching problems, showing good intuition about how the mathematics could be applied to the systems we were investigating.  On assessments Nishanth took only two of the three large assessments scoring a 18/20 and a 45/55.  I hope to see more of Nishanth getting his good thought on to the page and applying his good mathematical and analytical skills to the upcoming semester!
 
 REPLACEMENTS MADE:
   - PERSON: "Anton" → "[PERSON_42]"
@@ -781,8 +743,6 @@ REPLACEMENTS MADE:
   - PERSON: "Anton" → "[PERSON_42]"
   - PERSON: "Desmos" → "[PERSON_31]"
   - PERSON: "Anton" → "[PERSON_42]"
-  - DATE_TIME: "the coming months" → "[DATE_TIME_13]"
-  - DATE_TIME: "the year" → "[DATE_TIME_2]"
 
 
 ----------------------------------------------------------------------
@@ -816,18 +776,17 @@ REPLACEMENTS MADE:
 ----------------------------------------------------------------------
 STUDENT: Martin, Joey
 GRADE: A-
-PII Replaced: 7
+PII Replaced: 6
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-[PERSON_45] is a great student to have in class. [PERSON_45] comes in with the passed down knowledge from his brother of what it means to take Honors Physics. At the very least [PERSON_45] knows that this is a class that requires commitment and consistent work outside of the classroom. For his part [PERSON_45] has started [DATE_TIME_2] off strong, showing that he was coming to class prepared, ready to learn, and that he is willing to follow up outside of class, using the outside resources available to him on the class website, doing practice tests and checking his work against provided solutions. A point of improvement for [PERSON_45] would be in his approach to classtime, especially moments where the class is given time for more open-ended problem solving. I have on multiple occasions needed to remind [PERSON_45] to get back to the task at hand, having found him drawn to a more interesting conversation about unrelated topics, treating the problem solving time as he might time in a common space around friends. With the freedom provided the expectation is that students will take on the responsibility of maintaining focus on the work of the class, not draw their peers into undoubtedly interesting conversations about anything but the physics we are trying to tackle.
+[PERSON_45] is a great student to have in class. [PERSON_45] comes in with the passed down knowledge from his brother of what it means to take Honors Physics. At the very least [PERSON_45] knows that this is a class that requires commitment and consistent work outside of the classroom. For his part [PERSON_45] has started the year off strong, showing that he was coming to class prepared, ready to learn, and that he is willing to follow up outside of class, using the outside resources available to him on the class website, doing practice tests and checking his work against provided solutions. A point of improvement for [PERSON_45] would be in his approach to classtime, especially moments where the class is given time for more open-ended problem solving. I have on multiple occasions needed to remind [PERSON_45] to get back to the task at hand, having found him drawn to a more interesting conversation about unrelated topics, treating the problem solving time as he might time in a common space around friends. With the freedom provided the expectation is that students will take on the responsibility of maintaining focus on the work of the class, not draw their peers into undoubtedly interesting conversations about anything but the physics we are trying to tackle.
 
 REPLACEMENTS MADE:
   - PERSON: "Joey" → "[PERSON_45]"
   - PERSON: "Joey" → "[PERSON_45]"
   - PERSON: "Joey" → "[PERSON_45]"
   - PERSON: "Joey" → "[PERSON_45]"
-  - DATE_TIME: "the year" → "[DATE_TIME_2]"
   - PERSON: "Joey" → "[PERSON_45]"
   - PERSON: "Joey" → "[PERSON_45]"
 
@@ -835,23 +794,19 @@ REPLACEMENTS MADE:
 ----------------------------------------------------------------------
 STUDENT: Rubinski, JJ
 GRADE: B-
-PII Replaced: 12
+PII Replaced: 8
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-[PERSON_46] is a great student to have in class, he is consistently attentive, and ready to learn. Despite his good focus and attention [PERSON_46] has had a challenging start to [DATE_TIME_2]. On his initial math assessment (17.5/20 87.5%) [PERSON_46] expressed some concern about some of the math on [DATE_TIME_19] of the opening assessment where I asked students to manipulate unfamiliar variables using algebraic rules, developing these skills will become more important as we move through the remainder of [DATE_TIME_2], so I encourage [PERSON_46] to come meet with me to review some of these rules and how to get into the habit of using variables only rather than relying on plugging in values. On his most recent assessment on Free fall and vectors (32/40 80%) [PERSON_46] struggled with identifying different types of values using units, sometimes using meters when the value was a velocity or vice versa. I hope that [PERSON_46] will come meet with me a few times so that we can clarify some of these points of confusion about essential skills as they are going to be used throughout the remainder of [DATE_TIME_2]. I am encouraged because [PERSON_46] seems open to feedback and ready to adjust his work. I hope to see [PERSON_46] during a shared free block or during opposite lunch in the near future!
+[PERSON_46] is a great student to have in class, he is consistently attentive, and ready to learn. Despite his good focus and attention [PERSON_46] has had a challenging start to the year. On his initial math assessment (17.5/20 87.5%) [PERSON_46] expressed some concern about some of the math on the second half of the opening assessment where I asked students to manipulate unfamiliar variables using algebraic rules, developing these skills will become more important as we move through the remainder of the year, so I encourage [PERSON_46] to come meet with me to review some of these rules and how to get into the habit of using variables only rather than relying on plugging in values. On his most recent assessment on Free fall and vectors (32/40 80%) [PERSON_46] struggled with identifying different types of values using units, sometimes using meters when the value was a velocity or vice versa. I hope that [PERSON_46] will come meet with me a few times so that we can clarify some of these points of confusion about essential skills as they are going to be used throughout the remainder of the year. I am encouraged because [PERSON_46] seems open to feedback and ready to adjust his work. I hope to see [PERSON_46] during a shared free block or during opposite lunch in the near future!
 
 REPLACEMENTS MADE:
   - PERSON: "JJ" → "[PERSON_46]"
   - PERSON: "JJ" → "[PERSON_46]"
-  - DATE_TIME: "the year" → "[DATE_TIME_2]"
-  - PERSON: "JJ" → "[PERSON_46]"
-  - DATE_TIME: "the second half" → "[DATE_TIME_19]"
-  - DATE_TIME: "the year" → "[DATE_TIME_2]"
   - PERSON: "JJ" → "[PERSON_46]"
   - PERSON: "JJ" → "[PERSON_46]"
   - PERSON: "JJ" → "[PERSON_46]"
-  - DATE_TIME: "the year" → "[DATE_TIME_2]"
+  - PERSON: "JJ" → "[PERSON_46]"
   - PERSON: "JJ" → "[PERSON_46]"
   - PERSON: "JJ" → "[PERSON_46]"
 
@@ -859,15 +814,14 @@ REPLACEMENTS MADE:
 ----------------------------------------------------------------------
 STUDENT: Vaytsman, Jesse
 GRADE: A
-PII Replaced: 9
+PII Replaced: 8
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-[PERSON_47] has commented that Honors Physics makes his brain hurt a bit, a review that I have taken as a compliment, stating that he needs a [DATE_TIME_20] break before thinking about physics again. I have enjoyed having [PERSON_47] in the class as he always brings interesting philosophical questions with him to the class. [PERSON_47]'s confidence has fluctuated as the interim has progressed. [PERSON_47] had a successful first assessment and asked to meet with me before our most recent assessment. [PERSON_47] made a meeting with me to review before our most recent assessment but when he arrived he insisted that he felt "pretty confident" after the review that he did on his own. [PERSON_47] ended up scoring a 35.5/40 (88%) which seemed below the confidence he expressed right before taking it. I encourage [PERSON_47] to follow up, even if he feels confident; more review can never hurt! I hope that [PERSON_47] will continue to bring his interesting questions to class, and hopefully as the material and processes become more familiar, Honors Physics will start to feel a bit more comfortable.
+[PERSON_47] has commented that Honors Physics makes his brain hurt a bit, a review that I have taken as a compliment, stating that he needs a three hour break before thinking about physics again. I have enjoyed having [PERSON_47] in the class as he always brings interesting philosophical questions with him to the class. [PERSON_47]'s confidence has fluctuated as the interim has progressed. [PERSON_47] had a successful first assessment and asked to meet with me before our most recent assessment. [PERSON_47] made a meeting with me to review before our most recent assessment but when he arrived he insisted that he felt "pretty confident" after the review that he did on his own. [PERSON_47] ended up scoring a 35.5/40 (88%) which seemed below the confidence he expressed right before taking it. I encourage [PERSON_47] to follow up, even if he feels confident; more review can never hurt! I hope that [PERSON_47] will continue to bring his interesting questions to class, and hopefully as the material and processes become more familiar, Honors Physics will start to feel a bit more comfortable.
 
 REPLACEMENTS MADE:
   - PERSON: "Jesse" → "[PERSON_47]"
-  - DATE_TIME: "three hour" → "[DATE_TIME_20]"
   - PERSON: "Jesse" → "[PERSON_47]"
   - PERSON: "Jesse" → "[PERSON_47]"
   - PERSON: "Jesse" → "[PERSON_47]"
@@ -880,15 +834,14 @@ REPLACEMENTS MADE:
 ----------------------------------------------------------------------
 STUDENT: Zhang, Michael
 GRADE: A
-PII Replaced: 6
+PII Replaced: 5
 ----------------------------------------------------------------------
 
 ANONYMIZED TEXT:
-[PERSON_20] has had a strong start to [DATE_TIME_2]. [PERSON_20] seems to have a knack for approaching physics problems, even unfamiliar ones, breaking them down and approaching them methodically, expressing his work neatly and clearly on the page. While there are small details that can be improved in his work [PERSON_20] often has the bigger picture clearly expressed with his detailed diagrams and well-organized work. I encourage [PERSON_20] to share more during classtime, both in working with his neighbor as well as with the wider classroom, as he could personally benefit his own understanding by expressing his understanding verbally as well as enhance the learning of his classmates with his insights into approaching problem solving. I am looking forward to the remainder of the semester with [PERSON_20].
+[PERSON_20] has had a strong start to the year. [PERSON_20] seems to have a knack for approaching physics problems, even unfamiliar ones, breaking them down and approaching them methodically, expressing his work neatly and clearly on the page. While there are small details that can be improved in his work [PERSON_20] often has the bigger picture clearly expressed with his detailed diagrams and well-organized work. I encourage [PERSON_20] to share more during classtime, both in working with his neighbor as well as with the wider classroom, as he could personally benefit his own understanding by expressing his understanding verbally as well as enhance the learning of his classmates with his insights into approaching problem solving. I am looking forward to the remainder of the semester with [PERSON_20].
 
 REPLACEMENTS MADE:
   - PERSON: "Michael" → "[PERSON_20]"
-  - DATE_TIME: "the year" → "[DATE_TIME_2]"
   - PERSON: "Michael" → "[PERSON_20]"
   - PERSON: "Michael" → "[PERSON_20]"
   - PERSON: "Michael" → "[PERSON_20]"

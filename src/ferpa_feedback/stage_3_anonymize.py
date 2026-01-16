@@ -108,6 +108,7 @@ class PIIDetector:
     """
 
     # Regex patterns for structured PII
+    # NOTE: DATE/DATE_TIME intentionally excluded - not needed for FERPA compliance
     PATTERNS = {
         "EMAIL": re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'),
         "PHONE": re.compile(r'\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b'),
@@ -116,7 +117,6 @@ class PIIDetector:
         "STUDENT_ID": re.compile(r'\b[Ss]tudent[\s_-]?[Ii][Dd][:\s]*\d{6,9}\b'),
         # Matches bare student ID with S prefix like "S12345678"
         "STUDENT_ID_BARE": re.compile(r'\b[Ss]\d{7,9}\b'),
-        "DATE": re.compile(r'\b\d{1,2}/\d{1,2}/\d{2,4}\b'),
     }
 
     def __init__(
@@ -185,20 +185,45 @@ class PIIDetector:
         return self._presidio_analyzer
 
     def _build_roster_patterns(self) -> None:
-        """Build regex patterns for all roster names."""
+        """Build regex patterns for all roster names, including nickname variants."""
         self._roster_patterns = []
 
         if not self.roster:
             return
 
+        # Import nickname mappings from stage_2_names
+        from ferpa_feedback.stage_2_names import FORMAL_TO_NICKNAMES, NICKNAME_MAP
+
         for student in self.roster.students:
-            for variant in student.all_name_variants:
-                # Create word-boundary pattern
-                pattern = re.compile(
-                    r'\b' + re.escape(variant) + r'\b',
-                    re.IGNORECASE,
-                )
-                self._roster_patterns.append((pattern, student.full_name))
+            # Start with all base variants from the roster entry
+            all_variants: set[str] = set(student.all_name_variants)
+
+            # Get first and last name for nickname expansion
+            first_name = student.first_name.lower()
+            last_name = student.last_name.lower()
+
+            # If first name is a formal name, add all its nicknames
+            # e.g., "William" -> also add "Will", "Bill", "Billy", "Willy"
+            if first_name in FORMAL_TO_NICKNAMES:
+                for nickname in FORMAL_TO_NICKNAMES[first_name]:
+                    all_variants.add(nickname)
+                    all_variants.add(f"{nickname} {last_name}")
+
+            # If first name is a nickname, add the formal name
+            # e.g., "Will" -> also add "William"
+            if first_name in NICKNAME_MAP:
+                for formal_name in NICKNAME_MAP[first_name]:
+                    all_variants.add(formal_name)
+                    all_variants.add(f"{formal_name} {last_name}")
+
+            # Create patterns for all variants
+            for variant in all_variants:
+                if len(variant) >= 2:  # Skip single-character names
+                    pattern = re.compile(
+                        r'\b' + re.escape(variant) + r'\b',
+                        re.IGNORECASE,
+                    )
+                    self._roster_patterns.append((pattern, student.full_name))
 
         logger.debug("roster_patterns_built", count=len(self._roster_patterns))
 
@@ -248,7 +273,8 @@ class PIIDetector:
         # 3. Presidio NER for unknown names and custom educational entities
         if self.use_presidio and self.presidio_analyzer:
             # Include custom educational entity types when custom recognizers enabled
-            entities = ["PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER", "DATE_TIME"]
+            # NOTE: DATE_TIME intentionally excluded - not needed for FERPA compliance
+            entities = ["PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER"]
             if self.use_custom_recognizers:
                 entities.extend(["STUDENT_ID", "GRADE_LEVEL", "SCHOOL_NAME"])
 

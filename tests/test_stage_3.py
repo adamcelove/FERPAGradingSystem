@@ -871,3 +871,140 @@ class TestPIIRecall:
             print(f"\n=== Student ID Detection Recall ===")
             print(f"Recall: {recall:.0%} ({detected}/{total})")
             assert recall >= self.RECALL_TARGET, f"Student ID recall {recall:.2%} below target"
+
+
+# ============================================================================
+# Test Nickname Detection and DATE_TIME Exclusion
+# ============================================================================
+
+
+class TestNicknameDetection:
+    """Tests for nickname expansion in roster-based PII detection."""
+
+    def test_nickname_detected_when_roster_has_formal_name(self):
+        """Test that 'Will' is detected when roster has 'William'."""
+        from ferpa_feedback.models import ClassRoster, RosterEntry
+
+        # Create roster with formal name "William"
+        roster = ClassRoster(
+            class_id="TEST001",
+            class_name="Test Class",
+            teacher_name="Test Teacher",
+            term="Fall 2024",
+            students=[
+                RosterEntry(
+                    student_id="S12345678",
+                    first_name="William",
+                    last_name="Smith",
+                )
+            ]
+        )
+
+        detector = PIIDetector(roster=roster, use_presidio=False)
+
+        # Test that "Will" is detected (nickname of William)
+        text = "Will has been an excellent student. Will shows great progress."
+        detections = detector.detect(text)
+
+        # Should detect both instances of "Will"
+        will_detections = [d for d in detections if d["text"].lower() == "will"]
+        assert len(will_detections) >= 1, "Should detect 'Will' as nickname of 'William'"
+
+        # Verify canonical name is set correctly
+        for detection in will_detections:
+            assert detection["canonical"] == "William Smith"
+            assert detection["type"] == "STUDENT_NAME"
+
+    def test_formal_name_detected_when_roster_has_nickname(self):
+        """Test that formal names are detected when roster has nickname."""
+        from ferpa_feedback.models import ClassRoster, RosterEntry
+
+        # Create roster with nickname "Bill"
+        roster = ClassRoster(
+            class_id="TEST001",
+            class_name="Test Class",
+            teacher_name="Test Teacher",
+            term="Fall 2024",
+            students=[
+                RosterEntry(
+                    student_id="S12345678",
+                    first_name="Bill",
+                    last_name="Johnson",
+                )
+            ]
+        )
+
+        detector = PIIDetector(roster=roster, use_presidio=False)
+
+        # Test that "William" is detected (formal name of Bill)
+        text = "William Johnson has submitted excellent work."
+        detections = detector.detect(text)
+
+        # Should detect "William" as formal name of "Bill"
+        william_detections = [d for d in detections if "william" in d["text"].lower()]
+        assert len(william_detections) >= 1, "Should detect 'William' as formal name of 'Bill'"
+
+    def test_all_common_nicknames_detected(self):
+        """Test that common nickname variants are all detected."""
+        from ferpa_feedback.models import ClassRoster, RosterEntry
+
+        roster = ClassRoster(
+            class_id="TEST001",
+            class_name="Test Class",
+            teacher_name="Test Teacher",
+            term="Fall 2024",
+            students=[
+                RosterEntry(
+                    student_id="S12345678",
+                    first_name="William",
+                    last_name="Brown",
+                )
+            ]
+        )
+
+        detector = PIIDetector(roster=roster, use_presidio=False)
+
+        # Test all William nicknames
+        text = "Will is great. Billy improved. Bill works hard. Willy participates."
+        detections = detector.detect(text)
+
+        detected_texts = [d["text"].lower() for d in detections]
+
+        # All variants should be detected
+        assert "will" in detected_texts, "Should detect 'Will'"
+        assert "billy" in detected_texts, "Should detect 'Billy'"
+        assert "bill" in detected_texts, "Should detect 'Bill'"
+        assert "willy" in detected_texts, "Should detect 'Willy'"
+
+
+class TestDateTimeExclusion:
+    """Tests to verify DATE_TIME is not detected as PII."""
+
+    def test_date_not_detected_in_text(self):
+        """Test that dates are NOT detected as PII."""
+        detector = PIIDetector(use_presidio=False)
+
+        # Text with dates
+        text = "The meeting is on 12/25/2024 and the deadline is 3/15/24."
+        detections = detector.detect(text)
+
+        # Should NOT detect any DATE types
+        date_detections = [d for d in detections if d["type"] == "DATE"]
+        assert len(date_detections) == 0, "Should NOT detect dates as PII"
+
+    def test_date_not_detected_with_presidio(self):
+        """Test that DATE_TIME is excluded from Presidio detection."""
+        detector = PIIDetector(use_presidio=True)
+
+        # Text with dates and times
+        text = "The school year started on September 1st, 2024. Classes begin at 8:00 AM."
+        detections = detector.detect(text)
+
+        # Should NOT detect DATE_TIME types
+        date_detections = [d for d in detections if d["type"] in ("DATE", "DATE_TIME")]
+        assert len(date_detections) == 0, "Should NOT detect dates/times as PII"
+
+    def test_pii_patterns_do_not_include_date(self):
+        """Verify DATE is not in PIIDetector.PATTERNS."""
+        assert "DATE" not in PIIDetector.PATTERNS, "DATE should not be in PATTERNS"
+        assert "DATE_TIME" not in PIIDetector.PATTERNS, "DATE_TIME should not be in PATTERNS"
