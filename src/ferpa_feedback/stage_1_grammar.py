@@ -9,7 +9,7 @@ processing happens on your infrastructure.
 """
 
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import language_tool_python
 import structlog
@@ -123,7 +123,7 @@ class GrammarChecker:
 
         return issues
 
-    def _calculate_confidence(self, match) -> float:
+    def _calculate_confidence(self, match: Any) -> float:
         """
         Calculate confidence score for a grammar match.
 
@@ -221,15 +221,15 @@ class GrammarReportGenerator:
     """Generates reports of grammar issues for review."""
 
     @staticmethod
-    def generate_summary(document: TeacherDocument) -> dict:
+    def generate_summary(document: TeacherDocument) -> Dict[str, Any]:
         """
         Generate a summary of grammar issues in a document.
 
         Returns:
             Dictionary with issue counts and details
         """
-        issues_by_rule = {}
-        issues_by_comment = {}
+        issues_by_rule: Dict[str, Dict[str, Any]] = {}
+        issues_by_comment: Dict[str, int] = {}
 
         for comment in document.comments:
             if comment.grammar_issues:
@@ -243,9 +243,11 @@ class GrammarReportGenerator:
                             "message": issue.message,
                             "examples": [],
                         }
-                    issues_by_rule[rule]["count"] += 1
-                    if len(issues_by_rule[rule]["examples"]) < 3:
-                        issues_by_rule[rule]["examples"].append(issue.context)
+                    rule_entry = issues_by_rule[rule]
+                    rule_entry["count"] = int(rule_entry["count"]) + 1
+                    examples = rule_entry["examples"]
+                    if isinstance(examples, list) and len(examples) < 3:
+                        examples.append(issue.context)
 
         return {
             "document_id": document.id,
@@ -255,14 +257,14 @@ class GrammarReportGenerator:
             "issues_by_rule": issues_by_rule,
             "most_common_issues": sorted(
                 issues_by_rule.items(),
-                key=lambda x: x[1]["count"],
+                key=lambda x: int(x[1]["count"]),
                 reverse=True,
             )[:10],
         }
 
 
 # Factory function for easy initialization with config
-def create_grammar_checker(config: dict) -> GrammarChecker:
+def create_grammar_checker(config: Dict[str, Any]) -> GrammarChecker:
     """
     Create a GrammarChecker from configuration dictionary.
 

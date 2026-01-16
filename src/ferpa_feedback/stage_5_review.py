@@ -15,7 +15,7 @@ This stage is 100% local - all PII handling stays on-premise.
 
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List, TYPE_CHECKING
+from typing import Any, Optional, List, TYPE_CHECKING
 import json
 
 import structlog
@@ -109,7 +109,7 @@ class DeAnonymizer:
     def restore_from_mappings(
         self,
         anonymized_text: str,
-        mappings: List[dict],
+        mappings: List[dict[str, str]],
     ) -> str:
         """
         Restore text using explicit mappings.
@@ -334,7 +334,7 @@ class ReviewQueue:
         )
         return "[]"
 
-    def get_statistics(self) -> dict:
+    def get_statistics(self) -> dict[str, int]:
         """
         Get queue statistics.
 
@@ -389,7 +389,7 @@ class ReviewProcessor:
 # Factory function
 def create_review_processor(
     storage_path: Optional[Path] = None,
-    config: Optional[dict] = None,
+    config: Optional[dict[str, Any]] = None,
 ) -> ReviewQueue:
     """
     Factory function for Stage 5.
@@ -447,7 +447,7 @@ def create_review_app(queue: ReviewQueue) -> "FastAPI":
         version="0.1.0",
     )
 
-    @app.get("/", response_class=HTMLResponse)
+    @app.get("/", response_class=HTMLResponse)  # type: ignore[untyped-decorator]
     async def review_list() -> HTMLResponse:
         """
         Display list of pending comments for review.
@@ -521,7 +521,7 @@ def create_review_app(queue: ReviewQueue) -> "FastAPI":
         """
         return HTMLResponse(content=html_content)
 
-    @app.post("/review/{comment_id}")
+    @app.post("/review/{comment_id}")  # type: ignore[untyped-decorator]
     async def submit_review(
         comment_id: str,
         status: str = Query(..., description="Review status: approved, rejected, or modified"),
@@ -573,7 +573,7 @@ def create_review_app(queue: ReviewQueue) -> "FastAPI":
             }
         )
 
-    @app.get("/export")
+    @app.get("/export")  # type: ignore[untyped-decorator]
     async def export_approved(
         format: str = Query("json", description="Export format (json supported)"),
     ) -> JSONResponse:

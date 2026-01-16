@@ -17,10 +17,11 @@ import re
 import uuid
 from enum import Enum, auto
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 import structlog
-from docx import Document
+from docx import Document as DocxDocument
+from docx.document import Document
 from docx.table import Table
 
 from ferpa_feedback.models import StudentComment, TeacherDocument
@@ -118,7 +119,7 @@ class DocumentParser:
             TeacherDocument with extracted comments
         """
         document_id = document_id or str(uuid.uuid4())
-        doc = Document(file_path)
+        doc: Document = DocxDocument(str(file_path))
 
         logger.info("parsing_document", path=str(file_path), doc_id=document_id)
 
@@ -157,7 +158,7 @@ class DocumentParser:
             comments=comments,
         )
 
-    def _detect_format(self, doc: Document) -> DocumentFormat:
+    def _detect_format(self, doc: Any) -> DocumentFormat:
         """
         Auto-detect the document format by examining structure.
         """
@@ -189,7 +190,7 @@ class DocumentParser:
         return DocumentFormat.UNKNOWN
 
     def _parse_combined_header_format(
-        self, doc: Document, document_id: str
+        self, doc: Any, document_id: str
     ) -> Iterator[StudentComment]:
         """
         Parse documents with combined "Name - Grade" headers.
@@ -251,7 +252,7 @@ class DocumentParser:
             )
 
     def _parse_separate_header_format(
-        self, doc: Document, document_id: str
+        self, doc: Any, document_id: str
     ) -> Iterator[StudentComment]:
         """
         Parse documents with name and grade on separate lines.
@@ -443,7 +444,7 @@ class RosterLoader:
     """Loads student rosters and can match against parsed comments."""
 
     @staticmethod
-    def from_csv(file_path: Path) -> List[Dict]:
+    def from_csv(file_path: Path) -> List[Dict[str, str]]:
         """
         Load roster from CSV file.
 
@@ -451,7 +452,7 @@ class RosterLoader:
         """
         import csv
 
-        roster = []
+        roster: List[Dict[str, str]] = []
         with open(file_path, newline='', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             for row in reader:
@@ -467,8 +468,8 @@ class RosterLoader:
 
     @staticmethod
     def match_comment_to_roster(
-        comment: StudentComment, roster: List[Dict]
-    ) -> Optional[Dict]:
+        comment: StudentComment, roster: List[Dict[str, str]]
+    ) -> Optional[Dict[str, str]]:
         """
         Find the roster entry matching a comment's student.
 

@@ -21,10 +21,10 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 import structlog
-import yaml
+import yaml  # type: ignore[import-untyped]
 
 from ferpa_feedback.models import (
     ClassRoster,
@@ -55,7 +55,7 @@ class PipelineConfig:
         Args:
             config_path: Path to settings.yaml
         """
-        self.config: Dict[str, object] = {}
+        self.config: Dict[str, Any] = {}
 
         if config_path and config_path.exists():
             with open(config_path, 'r') as f:
@@ -67,35 +67,48 @@ class PipelineConfig:
     @property
     def stages_enabled(self) -> Dict[str, bool]:
         """Get enabled stages."""
-        return self.config.get("pipeline", {}).get("stages", {
+        pipeline_config = self.config.get("pipeline", {})
+        if isinstance(pipeline_config, dict):
+            stages = pipeline_config.get("stages", {
+                "grammar": True,
+                "name_matching": True,
+                "completeness": True,
+                "grade_consistency": True,
+            })
+            return cast(Dict[str, bool], stages)
+        return {
             "grammar": True,
             "name_matching": True,
             "completeness": True,
             "grade_consistency": True,
-        })
+        }
 
     @property
-    def grammar_config(self) -> Dict[str, object]:
+    def grammar_config(self) -> Dict[str, Any]:
         """Get grammar checker configuration."""
-        return self.config.get("grammar", {})
+        result = self.config.get("grammar", {})
+        return cast(Dict[str, Any], result)
 
     @property
-    def name_detection_config(self) -> Dict[str, object]:
+    def name_detection_config(self) -> Dict[str, Any]:
         """Get name detection configuration."""
-        return self.config.get("name_detection", {})
+        result = self.config.get("name_detection", {})
+        return cast(Dict[str, Any], result)
 
     @property
-    def anonymization_config(self) -> Dict[str, object]:
+    def anonymization_config(self) -> Dict[str, Any]:
         """Get anonymization configuration."""
-        return self.config.get("anonymization", {})
+        result = self.config.get("anonymization", {})
+        return cast(Dict[str, Any], result)
 
     @property
-    def ferpa_config(self) -> Dict[str, object]:
+    def ferpa_config(self) -> Dict[str, Any]:
         """Get FERPA compliance configuration."""
-        return self.config.get("ferpa", {
+        result = self.config.get("ferpa", {
             "anonymize_before_api": True,
             "log_all_api_calls": True,
         })
+        return cast(Dict[str, Any], result)
 
 
 class FeedbackPipeline:
@@ -140,19 +153,17 @@ class FeedbackPipeline:
         self.document_parser = DocumentParser()
 
         # Stage 1: Grammar checking
+        self.grammar_checker: Optional[GrammarChecker] = None
         if self.config.stages_enabled.get("grammar", True):
             self.grammar_checker = create_grammar_checker(self.config.grammar_config)
-        else:
-            self.grammar_checker = None
 
         # Stage 2: Name verification
+        self.name_processor: Optional[NameVerificationProcessor] = None
         if self.config.stages_enabled.get("name_matching", True):
             self.name_processor = create_name_processor(
                 roster=self.roster,
                 config=self.config.name_detection_config,
             )
-        else:
-            self.name_processor = None
 
         # Stage 3: Anonymization
         self.anonymization_processor = create_anonymization_processor(

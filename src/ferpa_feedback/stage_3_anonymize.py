@@ -18,7 +18,7 @@ This stage is 100% local - no external API calls.
 """
 
 import re
-from typing import List, Optional
+from typing import Any, List, Optional, Pattern
 
 import structlog
 
@@ -36,7 +36,7 @@ def create_enhanced_analyzer(
     roster: Optional[ClassRoster] = None,
     school_patterns: Optional[List[str]] = None,
     score_threshold: float = 0.3,  # Low threshold for high recall
-) -> Optional["AnalyzerEngine"]:
+) -> Optional[Any]:
     """
     Create an enhanced Presidio analyzer with custom educational recognizers.
 
@@ -140,7 +140,7 @@ class PIIDetector:
         self.school_patterns = school_patterns
         self.score_threshold = score_threshold
         self._presidio_analyzer = None
-        self._roster_patterns: List[tuple[re.Pattern, str]] = []
+        self._roster_patterns: List[tuple[Pattern[str], str]] = []
 
         if roster:
             self._build_roster_patterns()
@@ -153,7 +153,7 @@ class PIIDetector:
         )
 
     @property
-    def presidio_analyzer(self):
+    def presidio_analyzer(self) -> Optional[Any]:
         """Lazy-load Presidio analyzer with optional custom recognizers."""
         if self._presidio_analyzer is None and self.use_presidio:
             if self.use_custom_recognizers:
@@ -204,7 +204,7 @@ class PIIDetector:
         self.roster = roster
         self._build_roster_patterns()
 
-    def detect(self, text: str) -> list[dict]:
+    def detect(self, text: str) -> List[dict[str, Any]]:
         """
         Detect all PII in text.
 
@@ -277,7 +277,10 @@ class PIIDetector:
                     })
 
         # Sort by position (for consistent replacement order)
-        detections.sort(key=lambda x: x["start"])
+        def get_start(x: dict[str, Any]) -> int:
+            start_val = x.get("start", 0)
+            return int(start_val) if start_val is not None else 0
+        detections.sort(key=get_start)
 
         return detections
 
@@ -334,7 +337,7 @@ class Anonymizer:
     def anonymize(
         self,
         text: str,
-        detections: list[dict],
+        detections: List[dict[str, Any]],
     ) -> tuple[str, list[AnonymizationMapping]]:
         """
         Anonymize text by replacing detected PII.
@@ -501,7 +504,7 @@ class AnonymizationProcessor:
             }
         )
 
-    def verify_anonymization(self, document: TeacherDocument) -> dict:
+    def verify_anonymization(self, document: TeacherDocument) -> dict[str, Any]:
         """
         Verify that a document is properly anonymized.
 
@@ -536,7 +539,7 @@ class AnonymizationProcessor:
                 issues.append({
                     "comment_id": comment.id,
                     "issue": "Potential PII in anonymized text",
-                    "detected": real_pii,
+                    "detected": str(real_pii),
                 })
 
         return {
@@ -619,7 +622,7 @@ class AnonymizationGate:
 # Factory function
 def create_anonymization_processor(
     roster: Optional[ClassRoster] = None,
-    config: Optional[dict] = None,
+    config: Optional[dict[str, Any]] = None,
 ) -> AnonymizationProcessor:
     """
     Create configured anonymization processor.

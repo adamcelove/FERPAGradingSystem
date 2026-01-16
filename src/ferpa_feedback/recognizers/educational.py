@@ -7,13 +7,19 @@ These recognizers extend Presidio's capabilities to better handle FERPA-protecte
 data in student feedback systems.
 """
 
-from typing import List, Optional
+from typing import Any, List, Optional, TYPE_CHECKING
+
+PRESIDIO_AVAILABLE = False
+_PatternRecognizerBase: Any = None
 
 try:
     from presidio_analyzer import Pattern, PatternRecognizer
     PRESIDIO_AVAILABLE = True
+    _PatternRecognizerBase = PatternRecognizer
 except ImportError:
-    PRESIDIO_AVAILABLE = False
+    pass
+
+if not PRESIDIO_AVAILABLE:
     # Provide stub classes when presidio is not installed
     class Pattern:  # type: ignore[no-redef]
         """Stub Pattern class when presidio is not installed."""
@@ -27,12 +33,12 @@ except ImportError:
             self.regex = regex
             self.score = score
 
-    class PatternRecognizer:  # type: ignore[no-redef]
+    class _StubPatternRecognizer:
         """Stub PatternRecognizer class when presidio is not installed."""
         def __init__(
             self,
             supported_entity: str,
-            patterns: Optional[List[Pattern]] = None,
+            patterns: Optional[List[Any]] = None,
             context: Optional[List[str]] = None,
             **kwargs: object
         ) -> None:
@@ -40,8 +46,10 @@ except ImportError:
             self.patterns = patterns or []
             self.context = context or []
 
+    _PatternRecognizerBase = _StubPatternRecognizer
 
-class StudentIDRecognizer(PatternRecognizer):
+
+class StudentIDRecognizer(_PatternRecognizerBase):  # type: ignore[misc]
     """Recognizer for detecting student ID patterns.
 
     Detects patterns like:
@@ -75,7 +83,7 @@ class StudentIDRecognizer(PatternRecognizer):
         )
 
 
-class GradeLevelRecognizer(PatternRecognizer):
+class GradeLevelRecognizer(_PatternRecognizerBase):  # type: ignore[misc]
     """Recognizer for detecting grade level mentions.
 
     Detects patterns like:
@@ -108,7 +116,7 @@ class GradeLevelRecognizer(PatternRecognizer):
         )
 
 
-class SchoolNameRecognizer(PatternRecognizer):
+class SchoolNameRecognizer(_PatternRecognizerBase):  # type: ignore[misc]
     """Recognizer for detecting school names.
 
     This recognizer is configurable with custom school name patterns

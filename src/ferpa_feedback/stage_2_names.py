@@ -12,7 +12,7 @@ This module provides:
 """
 
 import re
-from typing import Optional, Protocol, List, Tuple, Dict
+from typing import Any, Optional, Protocol, List, Tuple, Dict, Union
 
 from ferpa_feedback.models import (
     ClassRoster,
@@ -770,7 +770,7 @@ class NameVerificationProcessor:
 
 def create_name_processor(
     roster: Optional[ClassRoster] = None,
-    config: Optional[dict] = None,
+    config: Optional[Dict[str, Any]] = None,
 ) -> NameVerificationProcessor:
     """
     Factory function for creating a NameVerificationProcessor.

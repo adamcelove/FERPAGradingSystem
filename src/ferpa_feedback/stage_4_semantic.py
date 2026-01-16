@@ -77,7 +77,7 @@ class FERPAEnforcedClient:
         self.gate = gate
         self.enable_zdr = enable_zdr
         self._api_key = api_key
-        self._client = None  # Lazy load
+        self._client: Optional[Any] = None  # Lazy load
 
         logger.info(
             "ferpa_client_initialized",
@@ -85,7 +85,7 @@ class FERPAEnforcedClient:
         )
 
     @property
-    def client(self):
+    def client(self) -> Optional[Any]:
         """Lazy-load Anthropic client."""
         if self._client is None:
             try:
@@ -336,7 +336,7 @@ Rules:
                 text = "\n".join(json_lines)
 
             # Parse JSON
-            data = json.loads(text)
+            data: dict[str, Any] = json.loads(text)
             return data
 
         except json.JSONDecodeError as e:
@@ -626,7 +626,7 @@ Rules:
                 text = "\n".join(json_lines)
 
             # Parse JSON
-            data = json.loads(text)
+            data: dict[str, Any] = json.loads(text)
             return data
 
         except json.JSONDecodeError as e:
@@ -855,7 +855,7 @@ class SemanticAnalysisProcessor:
 
 
 def create_semantic_processor(
-    config: Optional[dict] = None,
+    config: Optional[dict[str, Any]] = None,
     ferpa_gate: Optional[AnonymizationGate] = None,
 ) -> SemanticAnalysisProcessor:
     """
