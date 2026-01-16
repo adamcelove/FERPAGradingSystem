@@ -11,7 +11,8 @@ This module provides:
 - create_name_processor factory function
 """
 
-from typing import Optional, Protocol, List, Tuple
+import re
+from typing import Optional, Protocol, List, Tuple, Dict
 
 from ferpa_feedback.models import (
     ClassRoster,
@@ -41,6 +42,299 @@ try:
     SPACY_AVAILABLE = True
 except ImportError:
     SPACY_AVAILABLE = False
+
+
+# Nickname expansion table for common name variations
+# Maps nickname -> formal name(s)
+NICKNAME_MAP: Dict[str, List[str]] = {
+    # William variants
+    "bill": ["william"],
+    "billy": ["william"],
+    "will": ["william"],
+    "willy": ["william"],
+    # Robert variants
+    "bob": ["robert"],
+    "bobby": ["robert"],
+    "rob": ["robert"],
+    "robbie": ["robert"],
+    # Richard variants
+    "dick": ["richard"],
+    "rick": ["richard"],
+    "ricky": ["richard"],
+    "rich": ["richard"],
+    # James variants
+    "jim": ["james"],
+    "jimmy": ["james"],
+    "jamie": ["james"],
+    # Michael variants
+    "mike": ["michael"],
+    "mikey": ["michael"],
+    "mick": ["michael"],
+    # Elizabeth variants
+    "liz": ["elizabeth"],
+    "lizzy": ["elizabeth"],
+    "beth": ["elizabeth"],
+    "betty": ["elizabeth"],
+    "eliza": ["elizabeth"],
+    # Katherine/Catherine variants
+    "kate": ["katherine", "catherine"],
+    "katie": ["katherine", "catherine"],
+    "kathy": ["katherine", "catherine"],
+    "cathy": ["katherine", "catherine"],
+    "kat": ["katherine", "catherine"],
+    # Jennifer variants
+    "jen": ["jennifer"],
+    "jenny": ["jennifer"],
+    # Margaret variants
+    "maggie": ["margaret"],
+    "meg": ["margaret"],
+    "peggy": ["margaret"],
+    # Edward variants
+    "ed": ["edward"],
+    "eddie": ["edward"],
+    "ted": ["edward", "theodore"],
+    "teddy": ["edward", "theodore"],
+    # Alexander variants
+    "alex": ["alexander", "alexandra"],
+    "al": ["alexander", "albert", "alfred"],
+    "xander": ["alexander"],
+    # Daniel variants
+    "dan": ["daniel"],
+    "danny": ["daniel"],
+    # Joseph variants
+    "joe": ["joseph"],
+    "joey": ["joseph"],
+    # Christopher variants
+    "chris": ["christopher", "christine", "christina"],
+    # Anthony variants
+    "tony": ["anthony"],
+    # Nicholas variants
+    "nick": ["nicholas"],
+    "nicky": ["nicholas"],
+    # Matthew variants
+    "matt": ["matthew"],
+    "matty": ["matthew"],
+    # Thomas variants
+    "tom": ["thomas"],
+    "tommy": ["thomas"],
+    # Patrick variants
+    "pat": ["patrick", "patricia"],
+    "patty": ["patricia"],
+    # Rebecca variants
+    "becky": ["rebecca"],
+    "becca": ["rebecca"],
+    # Samantha/Samuel variants
+    "sam": ["samuel", "samantha"],
+    "sammy": ["samuel", "samantha"],
+    # Timothy variants
+    "tim": ["timothy"],
+    "timmy": ["timothy"],
+    # Andrew variants
+    "andy": ["andrew"],
+    "drew": ["andrew"],
+    # David variants
+    "dave": ["david"],
+    "davy": ["david"],
+    # Gregory variants
+    "greg": ["gregory"],
+    # Jonathan variants
+    "john": ["jonathan", "johnathan"],
+    "jon": ["jonathan", "johnathan"],
+    "johnny": ["jonathan", "johnathan", "john"],
+    # Stephen/Steven variants
+    "steve": ["steven", "stephen"],
+    "stevie": ["steven", "stephen"],
+    # Benjamin variants
+    "ben": ["benjamin"],
+    "benny": ["benjamin"],
+    # Charles variants
+    "charlie": ["charles"],
+    "chuck": ["charles"],
+    # Victoria variants
+    "vicky": ["victoria"],
+    "tori": ["victoria"],
+    # Deborah variants
+    "deb": ["deborah", "debra"],
+    "debbie": ["deborah", "debra"],
+}
+
+# Reverse mapping: formal name -> nicknames
+FORMAL_TO_NICKNAMES: Dict[str, List[str]] = {}
+for nickname, formal_names in NICKNAME_MAP.items():
+    for formal_name in formal_names:
+        if formal_name not in FORMAL_TO_NICKNAMES:
+            FORMAL_TO_NICKNAMES[formal_name] = []
+        if nickname not in FORMAL_TO_NICKNAMES[formal_name]:
+            FORMAL_TO_NICKNAMES[formal_name].append(nickname)
+
+# Common name suffixes to strip
+NAME_SUFFIXES = [
+    "jr.", "jr", "junior",
+    "sr.", "sr", "senior",
+    "iii", "ii", "iv", "v",
+    "3rd", "2nd", "4th", "5th",
+    "esq.", "esq",
+    "phd", "ph.d.", "ph.d",
+    "md", "m.d.", "m.d",
+]
+
+
+def normalize_name(name: str) -> str:
+    """
+    Normalize a name for comparison.
+
+    Handles:
+    - Case normalization (lowercase)
+    - Apostrophe removal (O'Brien -> obrien)
+    - Hyphen handling (Smith-Jones -> smithjones for comparison)
+    - Suffix stripping (Jr., Sr., III, etc.)
+    - Extra whitespace removal
+
+    Args:
+        name: The name to normalize.
+
+    Returns:
+        Normalized name string for comparison.
+    """
+    if not name:
+        return ""
+
+    # Convert to lowercase
+    normalized = name.lower().strip()
+
+    # Strip suffixes (must be done before other transformations)
+    normalized = strip_suffix(normalized)
+
+    # Remove apostrophes (O'Brien -> obrien)
+    normalized = normalized.replace("'", "").replace("'", "")
+
+    # Remove hyphens (Smith-Jones -> smithjones)
+    normalized = normalized.replace("-", "")
+
+    # Collapse multiple spaces to single space
+    normalized = re.sub(r"\s+", " ", normalized)
+
+    return normalized.strip()
+
+
+def strip_suffix(name: str) -> str:
+    """
+    Strip common name suffixes (Jr., Sr., III, etc.).
+
+    Args:
+        name: Name possibly containing a suffix.
+
+    Returns:
+        Name with suffix removed.
+    """
+    if not name:
+        return ""
+
+    name_lower = name.lower().strip()
+
+    for suffix in NAME_SUFFIXES:
+        # Check if name ends with suffix (with possible comma before)
+        patterns = [
+            f", {suffix}$",  # "Smith, Jr."
+            f" {suffix}$",   # "Smith Jr."
+            f",{suffix}$",   # "Smith,Jr." (no space)
+        ]
+        for pattern in patterns:
+            if re.search(pattern, name_lower):
+                # Remove the suffix pattern from the original name (preserve case of remaining)
+                result = re.sub(pattern, "", name_lower, flags=re.IGNORECASE)
+                return result.strip()
+
+    return name
+
+
+def expand_nicknames(name: str) -> List[str]:
+    """
+    Expand a name to include nickname variants.
+
+    Given a name, returns a list including:
+    - The original name
+    - Formal name(s) if the input is a nickname
+    - Nicknames if the input is a formal name
+
+    Args:
+        name: The name to expand.
+
+    Returns:
+        List of name variants including the original.
+    """
+    if not name:
+        return []
+
+    variants = [name]
+    name_lower = name.lower().strip()
+
+    # Split name into tokens for multi-word names
+    tokens = name_lower.split()
+
+    # Try to expand the first name (first token)
+    if tokens:
+        first_name = tokens[0]
+
+        # Check if it's a nickname -> get formal names
+        if first_name in NICKNAME_MAP:
+            for formal_name in NICKNAME_MAP[first_name]:
+                # Replace first token with formal name, keep rest of name
+                expanded_tokens = [formal_name] + tokens[1:]
+                variants.append(" ".join(expanded_tokens))
+
+        # Check if it's a formal name -> get nicknames
+        if first_name in FORMAL_TO_NICKNAMES:
+            for nickname in FORMAL_TO_NICKNAMES[first_name]:
+                # Replace first token with nickname, keep rest of name
+                expanded_tokens = [nickname] + tokens[1:]
+                variants.append(" ".join(expanded_tokens))
+
+    return variants
+
+
+def get_all_name_variants(name: str, include_nicknames: bool = True) -> List[str]:
+    """
+    Get all variants of a name for matching.
+
+    Includes:
+    - Original name
+    - Normalized name (apostrophes, hyphens removed)
+    - Suffix-stripped name
+    - Nickname expansions (if enabled)
+
+    Args:
+        name: The name to expand.
+        include_nicknames: Whether to include nickname expansions.
+
+    Returns:
+        List of all name variants.
+    """
+    if not name:
+        return []
+
+    variants = set()
+
+    # Add original
+    variants.add(name)
+
+    # Add normalized version
+    variants.add(normalize_name(name))
+
+    # Add suffix-stripped version
+    stripped = strip_suffix(name)
+    if stripped != name:
+        variants.add(stripped)
+        variants.add(normalize_name(stripped))
+
+    # Add nickname expansions
+    if include_nicknames:
+        for expanded in expand_nicknames(name):
+            variants.add(expanded)
+            variants.add(normalize_name(expanded))
+
+    # Remove empty strings
+    return [v for v in variants if v]
 
 
 class NameExtractor(Protocol):
@@ -295,6 +589,13 @@ class NameMatcher:
         """
         Match an extracted name against expected student.
 
+        Handles edge cases:
+        - Apostrophes (O'Brien, O'Connor)
+        - Hyphens (Smith-Jones, Mary-Kate)
+        - Prefix capitalization (McDonald, MacArthur) - case-insensitive
+        - Suffixes (Jr., Sr., III) - stripped before matching
+        - Nicknames (Bill/William, Bob/Robert) - expanded variants
+
         Args:
             extracted_name: Name found in comment text.
             expected_name: Expected student name from header.
@@ -303,26 +604,43 @@ class NameMatcher:
         Returns:
             NameMatch with similarity score and confidence level.
         """
-        # Calculate best match score across all variants
+        # Expand variants to include normalized versions and nicknames
+        expanded_variants = set()
+        for variant in all_variants:
+            expanded_variants.update(get_all_name_variants(variant, include_nicknames=True))
+
+        # Also get variants for the extracted name
+        extracted_variants = get_all_name_variants(extracted_name, include_nicknames=True)
+
+        # Calculate best match score across all variant combinations
         best_score = 0.0
 
         if RAPIDFUZZ_AVAILABLE:
-            for variant in all_variants:
-                if self.algorithm == "token_sort_ratio":
-                    score = fuzz.token_sort_ratio(extracted_name, variant)
-                elif self.algorithm == "partial_ratio":
-                    score = fuzz.partial_ratio(extracted_name, variant)
-                else:
-                    # Default to token_sort_ratio
-                    score = fuzz.token_sort_ratio(extracted_name, variant)
+            # Compare all extracted variants against all expected variants
+            for extracted_var in extracted_variants:
+                for expected_var in expanded_variants:
+                    if self.algorithm == "token_sort_ratio":
+                        score = fuzz.token_sort_ratio(extracted_var, expected_var)
+                    elif self.algorithm == "partial_ratio":
+                        score = fuzz.partial_ratio(extracted_var, expected_var)
+                    else:
+                        # Default to token_sort_ratio
+                        score = fuzz.token_sort_ratio(extracted_var, expected_var)
 
-                if score > best_score:
-                    best_score = score
+                    if score > best_score:
+                        best_score = score
+
+                    # Early exit if perfect match found
+                    if best_score >= 100:
+                        break
+                if best_score >= 100:
+                    break
         else:
-            # Stub: simple case-insensitive exact match
-            extracted_lower = extracted_name.lower().strip()
-            for variant in all_variants:
-                if extracted_lower == variant.lower().strip():
+            # Stub: simple normalized comparison
+            extracted_normalized = normalize_name(extracted_name)
+            for variant in expanded_variants:
+                variant_normalized = normalize_name(variant)
+                if extracted_normalized == variant_normalized:
                     best_score = 100.0
                     break
 

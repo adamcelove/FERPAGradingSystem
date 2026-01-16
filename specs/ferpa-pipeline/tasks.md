@@ -273,7 +273,7 @@ After POC validated, clean up code and implement full functionality.
   - _Requirements: FR-4_
   - _Design: SpaCyExtractor interface_
 
-- [ ] 2.1.2 Handle name edge cases
+- [x] 2.1.2 Handle name edge cases
   - **Do**: Update name matching to handle edge cases
     1. Add apostrophe handling (O'Brien, O'Connor)
     2. Add hyphenated name handling (Smith-Jones)
