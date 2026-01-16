@@ -18,7 +18,7 @@ This stage is 100% local - no external API calls.
 """
 
 import re
-from typing import Optional
+from typing import List, Optional
 
 import structlog
 
@@ -30,6 +30,68 @@ from ferpa_feedback.models import (
 )
 
 logger = structlog.get_logger()
+
+
+def create_enhanced_analyzer(
+    roster: Optional[ClassRoster] = None,
+    school_patterns: Optional[List[str]] = None,
+    score_threshold: float = 0.3,  # Low threshold for high recall
+) -> Optional["AnalyzerEngine"]:
+    """
+    Create an enhanced Presidio analyzer with custom educational recognizers.
+
+    This factory function creates an AnalyzerEngine configured with:
+    - Standard Presidio recognizers (PERSON, EMAIL_ADDRESS, etc.)
+    - Custom educational recognizers (StudentID, GradeLevel, SchoolName)
+    - Low score threshold for high recall (prefer false positives over misses)
+
+    Args:
+        roster: Optional class roster (reserved for future roster-aware recognizers)
+        school_patterns: Optional list of regex patterns for school names
+        score_threshold: Minimum confidence score for detections (default 0.3)
+
+    Returns:
+        Configured AnalyzerEngine with custom recognizers registered,
+        or None if presidio is not available
+    """
+    try:
+        from presidio_analyzer import AnalyzerEngine
+    except ImportError:
+        logger.warning("presidio_analyzer not installed, enhanced analyzer unavailable")
+        return None
+
+    from ferpa_feedback.recognizers.educational import (
+        StudentIDRecognizer,
+        GradeLevelRecognizer,
+        SchoolNameRecognizer,
+        PRESIDIO_AVAILABLE,
+    )
+
+    # Only register recognizers if presidio is truly available
+    if not PRESIDIO_AVAILABLE:
+        logger.warning("presidio recognizers not available, using basic analyzer")
+        return AnalyzerEngine()
+
+    # Create analyzer engine
+    analyzer = AnalyzerEngine()
+
+    # Register custom educational recognizers
+    analyzer.registry.add_recognizer(StudentIDRecognizer())
+    analyzer.registry.add_recognizer(GradeLevelRecognizer())
+
+    # Add school name recognizer with custom patterns if provided
+    if school_patterns:
+        analyzer.registry.add_recognizer(SchoolNameRecognizer(school_patterns))
+    else:
+        analyzer.registry.add_recognizer(SchoolNameRecognizer())
+
+    logger.info(
+        "enhanced_analyzer_created",
+        score_threshold=score_threshold,
+        has_school_patterns=school_patterns is not None,
+    )
+
+    return analyzer
 
 
 class PIIDetector:
@@ -47,7 +109,10 @@ class PIIDetector:
         "EMAIL": re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'),
         "PHONE": re.compile(r'\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b'),
         "SSN": re.compile(r'\b\d{3}-\d{2}-\d{4}\b'),
-        "STUDENT_ID": re.compile(r'\b[Ss]tudent\s*[Ii][Dd][:\s]*(\d{6,9})\b'),
+        # Matches "Student ID: 12345678" or "student-id: 123456789"
+        "STUDENT_ID": re.compile(r'\b[Ss]tudent[\s_-]?[Ii][Dd][:\s]*\d{6,9}\b'),
+        # Matches bare student ID with S prefix like "S12345678"
+        "STUDENT_ID_BARE": re.compile(r'\b[Ss]\d{7,9}\b'),
         "DATE": re.compile(r'\b\d{1,2}/\d{1,2}/\d{2,4}\b'),
     }
 
@@ -55,6 +120,9 @@ class PIIDetector:
         self,
         roster: Optional[ClassRoster] = None,
         use_presidio: bool = True,
+        use_custom_recognizers: bool = True,
+        school_patterns: Optional[List[str]] = None,
+        score_threshold: float = 0.3,  # Low threshold for high recall
     ):
         """
         Initialize PII detector.
@@ -62,24 +130,55 @@ class PIIDetector:
         Args:
             roster: Class roster for known-name detection
             use_presidio: Whether to use Presidio for NER
+            use_custom_recognizers: Whether to use custom educational recognizers
+            school_patterns: Optional list of regex patterns for school names
+            score_threshold: Minimum confidence score for Presidio detections
         """
         self.roster = roster
         self.use_presidio = use_presidio
+        self.use_custom_recognizers = use_custom_recognizers
+        self.school_patterns = school_patterns
+        self.score_threshold = score_threshold
         self._presidio_analyzer = None
-        self._roster_patterns: list[tuple[re.Pattern, str]] = []
+        self._roster_patterns: List[tuple[re.Pattern, str]] = []
 
         if roster:
             self._build_roster_patterns()
 
-        logger.info("pii_detector_initialized", use_presidio=use_presidio)
+        logger.info(
+            "pii_detector_initialized",
+            use_presidio=use_presidio,
+            use_custom_recognizers=use_custom_recognizers,
+            score_threshold=score_threshold,
+        )
 
     @property
     def presidio_analyzer(self):
-        """Lazy-load Presidio analyzer."""
+        """Lazy-load Presidio analyzer with optional custom recognizers."""
         if self._presidio_analyzer is None and self.use_presidio:
-            from presidio_analyzer import AnalyzerEngine
-            self._presidio_analyzer = AnalyzerEngine()
-            logger.info("presidio_analyzer_loaded")
+            if self.use_custom_recognizers:
+                # Use enhanced analyzer with custom educational recognizers
+                enhanced = create_enhanced_analyzer(
+                    roster=self.roster,
+                    school_patterns=self.school_patterns,
+                    score_threshold=self.score_threshold,
+                )
+                if enhanced is not None:
+                    self._presidio_analyzer = enhanced
+                    logger.info("enhanced_presidio_analyzer_loaded")
+                else:
+                    # Presidio not available, disable
+                    self.use_presidio = False
+                    logger.info("presidio_unavailable_disabled")
+            else:
+                # Use default analyzer without custom recognizers
+                try:
+                    from presidio_analyzer import AnalyzerEngine
+                    self._presidio_analyzer = AnalyzerEngine()
+                    logger.info("presidio_analyzer_loaded")
+                except ImportError:
+                    self.use_presidio = False
+                    logger.info("presidio_unavailable_disabled")
         return self._presidio_analyzer
 
     def _build_roster_patterns(self) -> None:
@@ -143,12 +242,18 @@ class PIIDetector:
                     "confidence": 0.95,
                 })
 
-        # 3. Presidio NER for unknown names
+        # 3. Presidio NER for unknown names and custom educational entities
         if self.use_presidio and self.presidio_analyzer:
+            # Include custom educational entity types when custom recognizers enabled
+            entities = ["PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER", "DATE_TIME"]
+            if self.use_custom_recognizers:
+                entities.extend(["STUDENT_ID", "GRADE_LEVEL", "SCHOOL_NAME"])
+
             presidio_results = self.presidio_analyzer.analyze(
                 text,
-                entities=["PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER", "DATE_TIME"],
+                entities=entities,
                 language="en",
+                score_threshold=self.score_threshold,
             )
 
             for result in presidio_results:

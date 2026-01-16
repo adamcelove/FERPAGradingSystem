@@ -304,7 +304,7 @@ After POC validated, clean up code and implement full functionality.
   - _Requirements: FR-6, AC-4.1, AC-4.2_
   - _Design: New Recognizers_
 
-- [ ] 2.2.2 Integrate custom recognizers into PIIDetector
+- [x] 2.2.2 Integrate custom recognizers into PIIDetector
   - **Do**: Update PIIDetector to use custom recognizers
     1. Modify `PIIDetector` to accept custom recognizers
     2. Add `create_enhanced_analyzer` function
