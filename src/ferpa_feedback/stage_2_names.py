@@ -28,6 +28,13 @@ try:
 except ImportError:
     RAPIDFUZZ_AVAILABLE = False
 
+# Try to import GLiNER, fall back to stub if unavailable
+try:
+    from gliner import GLiNER
+    GLINER_AVAILABLE = True
+except ImportError:
+    GLINER_AVAILABLE = False
+
 
 class NameExtractor(Protocol):
     """Protocol for name extraction backends."""
@@ -58,6 +65,100 @@ class StubExtractor:
     def extract_names(self, text: str) -> List[Tuple[str, float]]:
         """Return empty list - stub implementation."""
         return []
+
+    def set_roster(self, roster: ClassRoster) -> None:
+        """Update roster for context-aware extraction."""
+        self._roster = roster
+
+
+class GLiNERExtractor:
+    """GLiNER-based name extractor using NER for PERSON entities.
+
+    Uses lazy loading for the model to avoid expensive initialization
+    until actually needed. Falls back to stub if GLiNER is not available
+    or model loading fails.
+    """
+
+    def __init__(
+        self,
+        model_name: str = "urchade/gliner_base",
+        threshold: float = 0.5,
+        roster: Optional[ClassRoster] = None,
+    ) -> None:
+        """
+        Initialize GLiNER extractor.
+
+        Args:
+            model_name: GLiNER model name (default: urchade/gliner_base)
+            threshold: Minimum confidence threshold for entity detection (0.0-1.0)
+            roster: Optional class roster for context-aware extraction
+        """
+        self._model_name = model_name
+        self._threshold = threshold
+        self._roster: Optional[ClassRoster] = roster
+        self._model: Optional["GLiNER"] = None
+        self._model_load_failed = False
+
+    def _load_model(self) -> bool:
+        """
+        Lazy load the GLiNER model.
+
+        Returns:
+            True if model loaded successfully, False otherwise.
+        """
+        if self._model is not None:
+            return True
+
+        if self._model_load_failed:
+            return False
+
+        if not GLINER_AVAILABLE:
+            self._model_load_failed = True
+            return False
+
+        try:
+            self._model = GLiNER.from_pretrained(self._model_name)
+            return True
+        except Exception:
+            # Model loading failed - fall back to stub behavior
+            self._model_load_failed = True
+            return False
+
+    def extract_names(self, text: str) -> List[Tuple[str, float]]:
+        """
+        Extract PERSON entities from text using GLiNER.
+
+        Args:
+            text: Input text to extract names from.
+
+        Returns:
+            List of (name, confidence) tuples for detected PERSON entities.
+            Returns empty list if model is not available or loading fails.
+        """
+        if not self._load_model():
+            # Fall back to stub behavior
+            return []
+
+        if self._model is None:
+            return []
+
+        try:
+            # GLiNER predict_entities expects labels list and text
+            labels = ["person"]
+            entities = self._model.predict_entities(text, labels, threshold=self._threshold)
+
+            # Extract name and score from each entity
+            results: List[Tuple[str, float]] = []
+            for entity in entities:
+                name = entity.get("text", "")
+                score = entity.get("score", 0.0)
+                if name:
+                    results.append((name, float(score)))
+
+            return results
+        except Exception:
+            # If prediction fails, return empty list
+            return []
 
     def set_roster(self, roster: ClassRoster) -> None:
         """Update roster for context-aware extraction."""

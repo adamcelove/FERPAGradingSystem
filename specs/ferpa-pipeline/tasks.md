@@ -120,7 +120,7 @@ Focus: Get the pipeline running end-to-end by fixing structure, creating missing
   - _Requirements: FR-2, AC-2.1_
   - _Design: Stage 2: Name Verification_
 
-- [ ] 1.3.2 Add GLiNER-based name extraction (basic)
+- [x] 1.3.2 Add GLiNER-based name extraction (basic)
   - **Do**: Implement GLiNERExtractor class for NER name extraction
     1. Add `GLiNERExtractor` class that loads GLiNER model
     2. Implement `extract_names` method to find PERSON entities
