@@ -11,6 +11,7 @@ Usage:
 
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -18,7 +19,99 @@ import typer
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
+from ferpa_feedback.models import TeacherDocument
 from ferpa_feedback.pipeline import create_pipeline
+
+
+def generate_grammar_report(document: TeacherDocument, input_path: Path) -> Path:
+    """
+    Generate a grammar report document showing all errors found.
+
+    Args:
+        document: The processed TeacherDocument with grammar issues
+        input_path: Path to the original input file
+
+    Returns:
+        Path to the generated report file
+    """
+    # Create report filename in same directory as input
+    report_name = f"{input_path.stem}_grammar_report.txt"
+    report_path = input_path.parent / report_name
+
+    lines = []
+    lines.append("=" * 70)
+    lines.append("GRAMMAR CHECK REPORT")
+    lines.append("=" * 70)
+    lines.append(f"Document: {input_path.name}")
+    lines.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    lines.append(f"Total Comments: {len(document.comments)}")
+
+    # Count totals
+    total_issues = sum(len(c.grammar_issues) for c in document.comments)
+    comments_with_issues = sum(1 for c in document.comments if c.grammar_issues)
+
+    lines.append(f"Comments with Issues: {comments_with_issues}")
+    lines.append(f"Total Issues Found: {total_issues}")
+    lines.append("=" * 70)
+    lines.append("")
+
+    # Group by student
+    for comment in document.comments:
+        if not comment.grammar_issues:
+            continue
+
+        lines.append("-" * 70)
+        lines.append(f"STUDENT: {comment.student_name}")
+        lines.append(f"GRADE: {comment.grade}")
+        lines.append(f"Issues Found: {len(comment.grammar_issues)}")
+        lines.append("-" * 70)
+        lines.append("")
+        lines.append("COMMENT TEXT:")
+        lines.append(comment.comment_text)
+        lines.append("")
+        lines.append("ISSUES:")
+        lines.append("")
+
+        for i, issue in enumerate(comment.grammar_issues, 1):
+            # Extract the problematic text from the comment
+            error_text = comment.comment_text[issue.offset:issue.offset + issue.length]
+
+            lines.append(f"  {i}. {issue.message}")
+            lines.append(f"     Error: \"{error_text}\"")
+            lines.append(f"     Location: character {issue.offset}-{issue.offset + issue.length}")
+            lines.append(f"     Rule: {issue.rule_id}")
+            lines.append(f"     Confidence: {issue.confidence:.0%}")
+
+            if issue.suggestions:
+                suggestions_str = ", ".join(f'"{s}"' for s in issue.suggestions[:3])
+                lines.append(f"     Suggestions: {suggestions_str}")
+
+            lines.append("")
+
+        lines.append("")
+
+    # Summary by rule type
+    lines.append("=" * 70)
+    lines.append("SUMMARY BY ERROR TYPE")
+    lines.append("=" * 70)
+
+    rule_counts: dict[str, int] = {}
+    for comment in document.comments:
+        for issue in comment.grammar_issues:
+            rule_counts[issue.rule_id] = rule_counts.get(issue.rule_id, 0) + 1
+
+    for rule_id, count in sorted(rule_counts.items(), key=lambda x: -x[1]):
+        lines.append(f"  {rule_id}: {count}")
+
+    lines.append("")
+    lines.append("=" * 70)
+    lines.append("END OF REPORT")
+    lines.append("=" * 70)
+
+    # Write report
+    report_path.write_text("\n".join(lines), encoding="utf-8")
+
+    return report_path
 
 app = typer.Typer(
     name="ferpa-feedback",
@@ -100,6 +193,8 @@ def process(
         raise typer.Exit(code=1)
 
     # Process documents
+    processed_docs: list[tuple[Path, TeacherDocument]] = []
+
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
@@ -111,6 +206,7 @@ def process(
             progress.update(task, description=f"Processing: {file_path.name}")
             try:
                 document = pipeline.process_document(file_path)
+                processed_docs.append((file_path, document))
                 console.print(
                     f"  [green]Processed:[/] {file_path.name} "
                     f"({len(document.comments)} comments)"
@@ -121,8 +217,17 @@ def process(
 
     console.print("\n[bold green]Processing complete![/]")
 
-    if output:
-        console.print(f"[dim]Output would be written to: {output}[/]")
+    # Generate grammar reports for each processed document
+    for file_path, document in processed_docs:
+        total_issues = sum(len(c.grammar_issues) for c in document.comments)
+        if total_issues > 0:
+            report_path = generate_grammar_report(document, file_path)
+            console.print(
+                f"[blue]Grammar report:[/] {report_path.name} "
+                f"({total_issues} issues found)"
+            )
+        else:
+            console.print(f"[dim]No grammar issues found in {file_path.name}[/]")
 
 
 @app.command()
