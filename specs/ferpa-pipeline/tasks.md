@@ -481,7 +481,7 @@ Add comprehensive test coverage for critical stages.
 
 ### 3.3 Stage 3 Tests
 
-- [ ] 3.3.1 Add unit tests for custom recognizers
+- [x] 3.3.1 Add unit tests for custom recognizers
   - **Do**: Test educational PII recognizers
     1. Create `tests/test_stage_3.py`
     2. Add tests for StudentIDRecognizer
