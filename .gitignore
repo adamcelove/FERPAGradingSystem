@@ -57,3 +57,7 @@ htmlcov/
 ~$*.docx
 ~$*.xlsx
 ~$*.xls
+
+# Sample data - NEVER commit real student data
+# This folder contains FERPA-protected information
+sample_data/
