@@ -13,10 +13,13 @@ Key features:
 - Zero Data Retention (ZDR) headers for compliance
 - Completeness analysis (specificity, actionability, etc.)
 - Grade-comment consistency detection
-- Stub implementations for POC (real API integration in Phase 2)
+- Exponential backoff retry for API reliability
 """
 
-from typing import Optional
+import json
+import os
+import time
+from typing import Any, Optional
 
 import structlog
 
@@ -99,7 +102,7 @@ class FERPAEnforcedClient:
         comment: StudentComment,
         prompt: str,
         max_tokens: int = 1000,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """
         Send anonymized text to API with FERPA enforcement.
 
@@ -131,8 +134,7 @@ class FERPAEnforcedClient:
         if self.enable_zdr:
             extra_headers["anthropic-beta"] = "zero-data-retention-2024-08-01"
 
-        # Make API call (stub for POC - returns empty dict)
-        # Real implementation would call Claude API here
+        # Check if client is available
         if self.client is None:
             logger.warning(
                 "api_call_skipped",
@@ -141,9 +143,42 @@ class FERPAEnforcedClient:
             )
             return {}
 
-        # Stub: Return empty response for POC
-        # Phase 2 will implement real API calls
-        return {}
+        # Make actual API call
+        try:
+            message = self.client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=max_tokens,
+                extra_headers=extra_headers if extra_headers else None,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt.format(comment_text=safe_text),
+                    }
+                ],
+            )
+
+            # Extract text content from response
+            response_text = ""
+            if message.content:
+                for block in message.content:
+                    if hasattr(block, "text"):
+                        response_text += block.text
+
+            logger.info(
+                "api_call_complete",
+                comment_id=comment.id,
+                response_length=len(response_text),
+            )
+
+            return {"text": response_text, "model": message.model}
+
+        except Exception as e:
+            logger.error(
+                "api_call_failed",
+                comment_id=comment.id,
+                error=str(e),
+            )
+            raise
 
 
 class CompletenessAnalyzer:
@@ -157,8 +192,43 @@ class CompletenessAnalyzer:
     - Length: Is it appropriately detailed?
     - Tone: Is the tone professional and constructive?
 
-    Stub implementation returns default scores for POC.
+    Uses Claude API for real analysis with exponential backoff retry.
+    Falls back to stub if API is unavailable.
     """
+
+    # Prompt template for completeness evaluation
+    COMPLETENESS_PROMPT = """Analyze the following student feedback comment for completeness.
+
+Comment to analyze:
+"{comment_text}"
+
+Evaluate the comment on these criteria (score each 0.0 to 1.0):
+1. SPECIFICITY: Does it mention specific behaviors, work, or examples?
+2. ACTIONABILITY: Does it provide clear guidance for improvement?
+3. EVIDENCE: Is there concrete evidence supporting the assessment?
+4. LENGTH: Is it appropriately detailed (not too brief, not excessive)?
+5. TONE: Is it professional, constructive, and appropriate?
+
+Respond ONLY with valid JSON in this exact format:
+{{
+  "specificity_score": 0.0,
+  "actionability_score": 0.0,
+  "evidence_score": 0.0,
+  "length_score": 0.0,
+  "tone_score": 0.0,
+  "missing_elements": ["element1", "element2"],
+  "explanation": "Brief explanation of the assessment"
+}}
+
+Rules:
+- Scores must be between 0.0 and 1.0
+- missing_elements should list what would improve the comment
+- explanation should be 1-2 sentences
+- Output ONLY the JSON, no other text"""
+
+    # Retry configuration: 3 retries with 1s, 2s, 4s delays
+    MAX_RETRIES = 3
+    RETRY_DELAYS = [1.0, 2.0, 4.0]
 
     def __init__(
         self,
@@ -177,27 +247,181 @@ class CompletenessAnalyzer:
 
         logger.info("completeness_analyzer_initialized")
 
-    def analyze(self, comment: StudentComment) -> CompletenessResult:
+    def _call_api_with_retry(self, comment: StudentComment) -> Optional[dict[str, Any]]:
         """
-        Analyze completeness of a single comment.
-
-        Stub implementation returns default values.
-        Phase 2 will implement real analysis with Claude API.
+        Call API with exponential backoff retry logic.
 
         Args:
             comment: The comment to analyze.
 
         Returns:
-            CompletenessResult with scores and assessment.
+            API response dict or None if all retries failed.
         """
-        # Stub: Return default completeness result
-        # Real implementation would use self.client to call Claude API
+        if self.client is None:
+            return None
 
-        logger.debug(
-            "completeness_analysis_stub",
+        last_error: Optional[Exception] = None
+
+        for attempt in range(self.MAX_RETRIES):
+            try:
+                response = self.client.analyze(
+                    comment=comment,
+                    prompt=self.COMPLETENESS_PROMPT,
+                    max_tokens=500,
+                )
+                return response
+
+            except Exception as e:
+                last_error = e
+                delay = self.RETRY_DELAYS[attempt] if attempt < len(self.RETRY_DELAYS) else self.RETRY_DELAYS[-1]
+
+                logger.warning(
+                    "completeness_api_retry",
+                    comment_id=comment.id,
+                    attempt=attempt + 1,
+                    max_attempts=self.MAX_RETRIES,
+                    delay_seconds=delay,
+                    error=str(e),
+                )
+
+                # Check if this is a rate limit error
+                error_str = str(e).lower()
+                if "rate" in error_str or "429" in error_str:
+                    # Double the delay for rate limits
+                    delay *= 2
+                    logger.info(
+                        "rate_limit_detected",
+                        comment_id=comment.id,
+                        extended_delay=delay,
+                    )
+
+                if attempt < self.MAX_RETRIES - 1:
+                    time.sleep(delay)
+
+        logger.error(
+            "completeness_api_failed",
             comment_id=comment.id,
+            error=str(last_error) if last_error else "unknown",
+        )
+        return None
+
+    def _parse_response(self, response_text: str) -> Optional[dict[str, Any]]:
+        """
+        Parse JSON response from Claude API.
+
+        Args:
+            response_text: Raw text response from API.
+
+        Returns:
+            Parsed dictionary or None if parsing fails.
+        """
+        try:
+            # Try to extract JSON from response
+            text = response_text.strip()
+
+            # Handle markdown code blocks
+            if text.startswith("```"):
+                # Find the JSON content between code blocks
+                lines = text.split("\n")
+                json_lines = []
+                in_json = False
+                for line in lines:
+                    if line.startswith("```") and not in_json:
+                        in_json = True
+                        continue
+                    elif line.startswith("```") and in_json:
+                        break
+                    elif in_json:
+                        json_lines.append(line)
+                text = "\n".join(json_lines)
+
+            # Parse JSON
+            data = json.loads(text)
+            return data
+
+        except json.JSONDecodeError as e:
+            logger.warning(
+                "completeness_parse_failed",
+                error=str(e),
+                response_preview=response_text[:200],
+            )
+            return None
+
+    def _create_result_from_api(self, data: dict[str, Any]) -> CompletenessResult:
+        """
+        Create CompletenessResult from parsed API response.
+
+        Args:
+            data: Parsed JSON response.
+
+        Returns:
+            CompletenessResult model.
+        """
+        # Extract scores with defaults
+        specificity = float(data.get("specificity_score", 0.5))
+        actionability = float(data.get("actionability_score", 0.5))
+        evidence = float(data.get("evidence_score", 0.5))
+        length = float(data.get("length_score", 0.5))
+        tone = float(data.get("tone_score", 0.5))
+
+        # Clamp scores to valid range
+        specificity = max(0.0, min(1.0, specificity))
+        actionability = max(0.0, min(1.0, actionability))
+        evidence = max(0.0, min(1.0, evidence))
+        length = max(0.0, min(1.0, length))
+        tone = max(0.0, min(1.0, tone))
+
+        # Calculate overall score (weighted average)
+        overall_score = (
+            specificity * 0.25 +
+            actionability * 0.25 +
+            evidence * 0.20 +
+            length * 0.15 +
+            tone * 0.15
         )
 
+        # Determine completeness threshold
+        is_complete = overall_score >= 0.6
+
+        # Determine confidence based on score distribution
+        scores = [specificity, actionability, evidence, length, tone]
+        score_variance = sum((s - overall_score) ** 2 for s in scores) / len(scores)
+
+        if score_variance < 0.05:
+            confidence = ConfidenceLevel.HIGH
+        elif score_variance < 0.15:
+            confidence = ConfidenceLevel.MEDIUM
+        else:
+            confidence = ConfidenceLevel.LOW
+
+        # Extract missing elements and explanation
+        missing_elements = data.get("missing_elements", [])
+        if not isinstance(missing_elements, list):
+            missing_elements = []
+        missing_elements = [str(elem) for elem in missing_elements]
+
+        explanation = str(data.get("explanation", ""))
+
+        return CompletenessResult(
+            is_complete=is_complete,
+            score=overall_score,
+            confidence=confidence,
+            specificity_score=specificity,
+            actionability_score=actionability,
+            evidence_score=evidence,
+            length_score=length,
+            tone_score=tone,
+            missing_elements=missing_elements,
+            explanation=explanation,
+        )
+
+    def _create_stub_result(self) -> CompletenessResult:
+        """
+        Create stub result when API is unavailable.
+
+        Returns:
+            Default CompletenessResult.
+        """
         return CompletenessResult(
             is_complete=True,
             score=0.5,
@@ -208,8 +432,44 @@ class CompletenessAnalyzer:
             length_score=0.5,
             tone_score=0.5,
             missing_elements=[],
-            explanation="Stub analysis - full implementation pending",
+            explanation="API unavailable - using stub analysis",
         )
+
+    def analyze(self, comment: StudentComment) -> CompletenessResult:
+        """
+        Analyze completeness of a single comment.
+
+        Uses Claude API for real analysis with exponential backoff retry.
+        Falls back to stub if API is unavailable or fails.
+
+        Args:
+            comment: The comment to analyze.
+
+        Returns:
+            CompletenessResult with scores and assessment.
+        """
+        # Try to use real API
+        if self.client is not None:
+            response = self._call_api_with_retry(comment)
+
+            if response and response.get("text"):
+                parsed = self._parse_response(response["text"])
+
+                if parsed:
+                    logger.info(
+                        "completeness_analysis_complete",
+                        comment_id=comment.id,
+                        used_api=True,
+                    )
+                    return self._create_result_from_api(parsed)
+
+        # Fall back to stub
+        logger.debug(
+            "completeness_analysis_stub",
+            comment_id=comment.id,
+            reason="api_unavailable_or_failed",
+        )
+        return self._create_stub_result()
 
 
 class ConsistencyAnalyzer:
