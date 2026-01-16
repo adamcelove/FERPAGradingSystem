@@ -230,7 +230,7 @@ Focus: Get the pipeline running end-to-end by fixing structure, creating missing
   - _Requirements: FR-11, FR-13, AC-6.1_
   - _Design: Stage 5: Review Queue_
 
-- [ ] 1.7.2 Quality Checkpoint
+- [x] 1.7.2 Quality Checkpoint
   - **Do**: Run quality checks for all stages
   - **Verify**: All commands must pass:
     - All stages import: `python -c "import sys; sys.path.insert(0, 'src'); from ferpa_feedback import stage_0_ingestion, stage_1_grammar, stage_2_names, stage_3_anonymize, stage_4_semantic, stage_5_review; print('All stages loaded')"`
@@ -239,7 +239,7 @@ Focus: Get the pipeline running end-to-end by fixing structure, creating missing
 
 ### 1.8 POC Checkpoint - End-to-End Validation
 
-- [ ] 1.8.1 Verify pipeline runs end-to-end
+- [x] 1.8.1 Verify pipeline runs end-to-end
   - **Do**: Test that the complete pipeline can be instantiated and run (may need sample doc)
     1. Create a simple test script that initializes FeedbackPipeline
     2. Verify all stages can be called in sequence
