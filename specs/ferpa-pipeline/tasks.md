@@ -148,7 +148,7 @@ Focus: Get the pipeline running end-to-end by fixing structure, creating missing
   - _Requirements: FR-5, AC-2.3, AC-2.4, AC-2.5_
   - _Design: NameMatcher interface_
 
-- [ ] 1.3.4 Quality Checkpoint
+- [x] 1.3.4 Quality Checkpoint
   - **Do**: Run quality checks to verify Stage 2 implementation
   - **Verify**: All commands must pass:
     - Import check: `python -c "import sys; sys.path.insert(0, 'src'); from ferpa_feedback.stage_2_names import NameVerificationProcessor, create_name_processor, GLiNERExtractor, NameMatcher; print('Stage 2 fully loaded')"`
@@ -157,7 +157,7 @@ Focus: Get the pipeline running end-to-end by fixing structure, creating missing
 
 ### 1.4 Update Pipeline Orchestrator
 
-- [ ] 1.4.1 Move pipeline.py to src/ferpa_feedback/
+- [x] 1.4.1 Move pipeline.py to src/ferpa_feedback/
   - **Do**: Copy pipeline orchestrator to new location
     1. Copy `pipeline.py` to `src/ferpa_feedback/pipeline.py`
     2. Imports already use `ferpa_feedback.*` paths
