@@ -15,7 +15,7 @@ This stage is 100% local - all PII handling stays on-premise.
 
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 import json
 
 import structlog
@@ -27,6 +27,9 @@ from ferpa_feedback.models import (
     TeacherDocument,
 )
 from ferpa_feedback.stage_3_anonymize import Anonymizer
+
+if TYPE_CHECKING:
+    from fastapi import FastAPI
 
 logger = structlog.get_logger()
 
@@ -412,3 +415,192 @@ def create_review_processor(
     )
 
     return queue
+
+
+def create_review_app(queue: ReviewQueue) -> "FastAPI":
+    """
+    Create FastAPI application for human review UI.
+
+    Provides web endpoints for reviewing flagged comments, updating
+    status, and exporting approved comments.
+
+    Args:
+        queue: ReviewQueue instance to serve
+
+    Returns:
+        FastAPI application instance
+
+    Raises:
+        ImportError: If FastAPI is not installed
+    """
+    try:
+        from fastapi import FastAPI, HTTPException, Query
+        from fastapi.responses import HTMLResponse, JSONResponse
+    except ImportError:
+        raise ImportError(
+            "Review UI requires FastAPI. Install with: pip install ferpa-feedback[review-ui]"
+        )
+
+    app = FastAPI(
+        title="FERPA Comment Review",
+        description="Human review interface for flagged student comments",
+        version="0.1.0",
+    )
+
+    @app.get("/", response_class=HTMLResponse)
+    async def review_list() -> HTMLResponse:
+        """
+        Display list of pending comments for review.
+
+        Returns HTML page with review items.
+        """
+        items = queue.get_pending()
+        stats = queue.get_statistics()
+
+        # Build HTML response
+        html_items = []
+        for item in items:
+            reasons_html = "".join(f"<li>{r}</li>" for r in item.review_reasons)
+            html_items.append(f"""
+            <div class="review-item" id="item-{item.comment_id}">
+                <h3>Comment: {item.comment_id}</h3>
+                <p><strong>Student:</strong> {item.student_name}</p>
+                <p><strong>Grade:</strong> {item.grade}</p>
+                <p><strong>Original Text:</strong> {item.original_text}</p>
+                <p><strong>Anonymized:</strong> {item.anonymized_text}</p>
+                <p><strong>Review Reasons:</strong></p>
+                <ul>{reasons_html}</ul>
+                <form action="/review/{item.comment_id}" method="post">
+                    <label for="status">Status:</label>
+                    <select name="status" id="status">
+                        <option value="approved">Approve</option>
+                        <option value="rejected">Reject</option>
+                        <option value="modified">Needs Modification</option>
+                    </select>
+                    <label for="reviewer_id">Reviewer ID:</label>
+                    <input type="text" name="reviewer_id" id="reviewer_id" required>
+                    <label for="notes">Notes:</label>
+                    <textarea name="notes" id="notes"></textarea>
+                    <button type="submit">Submit Review</button>
+                </form>
+            </div>
+            """)
+
+        items_html = "".join(html_items) if html_items else "<p>No pending items for review.</p>"
+
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>FERPA Comment Review</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 20px; }}
+                .stats {{ background: #f0f0f0; padding: 10px; margin-bottom: 20px; }}
+                .review-item {{ border: 1px solid #ccc; padding: 15px; margin: 10px 0; }}
+                form {{ margin-top: 10px; }}
+                label {{ display: block; margin-top: 5px; }}
+                input, select, textarea {{ margin-bottom: 10px; width: 100%; max-width: 300px; }}
+                button {{ background: #007bff; color: white; padding: 10px 20px; border: none; cursor: pointer; }}
+            </style>
+        </head>
+        <body>
+            <h1>FERPA Comment Review</h1>
+            <div class="stats">
+                <strong>Queue Statistics:</strong>
+                Total: {stats['total']} |
+                Pending: {stats['pending']} |
+                Approved: {stats['approved']} |
+                Rejected: {stats['rejected']} |
+                Modified: {stats['modified']}
+            </div>
+            <h2>Pending Reviews</h2>
+            {items_html}
+            <p><a href="/export">Export Approved Comments (JSON)</a></p>
+        </body>
+        </html>
+        """
+        return HTMLResponse(content=html_content)
+
+    @app.post("/review/{comment_id}")
+    async def submit_review(
+        comment_id: str,
+        status: str = Query(..., description="Review status: approved, rejected, or modified"),
+        reviewer_id: str = Query(..., description="ID of the reviewer"),
+        notes: str = Query("", description="Optional reviewer notes"),
+    ) -> JSONResponse:
+        """
+        Submit a review decision for a comment.
+
+        Args:
+            comment_id: ID of the comment being reviewed
+            status: New review status (approved, rejected, modified)
+            reviewer_id: ID of the reviewer submitting the decision
+            notes: Optional notes from the reviewer
+
+        Returns:
+            JSON response with update confirmation
+        """
+        # Validate comment exists
+        item = queue.get_by_id(comment_id)
+        if not item:
+            raise HTTPException(status_code=404, detail=f"Comment {comment_id} not found")
+
+        # Convert status string to ReviewStatus enum
+        try:
+            review_status = ReviewStatus(status.lower())
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid status: {status}. Must be one of: approved, rejected, modified"
+            )
+
+        # Update the status
+        queue.update_status(comment_id, review_status, reviewer_id, notes)
+
+        logger.info(
+            "review_submitted_via_ui",
+            comment_id=comment_id,
+            status=status,
+            reviewer_id=reviewer_id,
+        )
+
+        return JSONResponse(
+            content={
+                "success": True,
+                "comment_id": comment_id,
+                "status": status,
+                "message": f"Comment {comment_id} marked as {status}",
+            }
+        )
+
+    @app.get("/export")
+    async def export_approved(
+        format: str = Query("json", description="Export format (json supported)"),
+    ) -> JSONResponse:
+        """
+        Export approved comments.
+
+        Args:
+            format: Export format (currently only 'json' supported)
+
+        Returns:
+            JSON response with exported comments
+        """
+        export_data = queue.export_approved(format)
+
+        logger.info(
+            "export_requested_via_ui",
+            format=format,
+        )
+
+        # Parse the JSON string back to return as proper JSON response
+        try:
+            data = json.loads(export_data)
+            return JSONResponse(content={"approved_comments": data, "count": len(data)})
+        except json.JSONDecodeError:
+            return JSONResponse(
+                content={"error": "Export failed", "raw_data": export_data},
+                status_code=500,
+            )
+
+    return app

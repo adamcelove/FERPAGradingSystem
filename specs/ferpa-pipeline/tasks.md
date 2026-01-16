@@ -356,7 +356,7 @@ After POC validated, clean up code and implement full functionality.
 
 ### 2.4 Implement Stage 5 - Review UI
 
-- [ ] 2.4.1 Add FastAPI review UI (optional dependency)
+- [x] 2.4.1 Add FastAPI review UI (optional dependency)
   - **Do**: Implement web interface for human review
     1. Add `create_review_app` function to stage_5_review.py
     2. Implement GET `/` endpoint for review list
