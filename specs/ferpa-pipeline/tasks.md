@@ -82,7 +82,7 @@ Focus: Get the pipeline running end-to-end by fixing structure, creating missing
   - _Requirements: FR-1_
   - _Design: Phase 1: Structure Fix_
 
-- [ ] 1.2.4 Move stage_3_anonymize.py to src/ferpa_feedback/
+- [x] 1.2.4 Move stage_3_anonymize.py to src/ferpa_feedback/
   - **Do**: Copy anonymization stage to new location
     1. Copy `stage_3_anonymize.py` to `src/ferpa_feedback/stage_3_anonymize.py`
     2. Import path already correct: `from ferpa_feedback.models import ...`
