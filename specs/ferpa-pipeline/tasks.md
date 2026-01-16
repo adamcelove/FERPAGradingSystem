@@ -508,7 +508,7 @@ Add comprehensive test coverage for critical stages.
   - _Requirements: FR-7, AC-4.4, AC-4.5, NFR-1_
   - _Design: Unit Tests - TestPIIRecall_
 
-- [ ] 3.3.3 Quality Checkpoint
+- [x] 3.3.3 Quality Checkpoint
   - **Do**: Run all tests to verify test infrastructure
   - **Verify**: All commands must pass:
     - Run tests: `pytest tests/ -v`
@@ -517,7 +517,7 @@ Add comprehensive test coverage for critical stages.
 
 ### 3.4 Stage 4 Tests
 
-- [ ] 3.4.1 Add FERPA gate enforcement tests
+- [x] 3.4.1 Add FERPA gate enforcement tests
   - **Do**: Test that FERPA gate blocks unanonymized content
     1. Create `tests/test_stage_4.py`
     2. Add test for blocking unanonymized comment
