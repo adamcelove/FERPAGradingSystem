@@ -50,64 +50,50 @@ This system processes teacher comments stored in Google Docs, performing:
 ## Project Structure
 
 ```
-ferpa-comment-feedback/
+FERPA Comment system/
 ├── README.md
 ├── pyproject.toml
-├── .env.example
-├── config/
-│   ├── settings.yaml              # Main configuration
-│   ├── grading_scales.yaml        # Grade interpretation rules
-│   └── completeness_rubric.yaml   # What makes a "complete" comment
+├── settings.yaml                  # Main configuration
+├── completeness_rubric.yaml       # What makes a "complete" comment
 ├── src/
 │   └── ferpa_feedback/
 │       ├── __init__.py
+│       ├── cli.py                 # Command-line interface
+│       ├── models.py              # Data models
 │       ├── pipeline.py            # Main orchestrator
-│       ├── stage_0_ingestion/     # Document parsing
-│       ├── stage_1_grammar/       # LanguageTool integration
-│       ├── stage_2_names/         # Name extraction & matching
-│       ├── stage_3_anonymize/     # PII removal
-│       ├── stage_4_semantic/      # API-based analysis
-│       ├── stage_5_review/        # Human review queue
-│       └── utils/                 # Shared utilities
-├── agents/                        # Claude Code agent definitions
-│   ├── ferpa-compliance-reviewer.md
-│   ├── name-detection-specialist.md
-│   └── pipeline-debugger.md
-├── skills/                        # Custom skills for this project
-│   ├── ferpa-anonymization/
-│   └── gliner-name-detection/
+│       ├── stage_0_ingestion.py   # Document parsing
+│       ├── stage_1_grammar.py     # LanguageTool integration
+│       ├── stage_2_names.py       # Name extraction & matching
+│       ├── stage_3_anonymize.py   # PII removal
+│       ├── stage_4_semantic.py    # API-based analysis
+│       ├── stage_5_review.py      # Human review queue
+│       └── recognizers/           # Custom PII recognizers
+│           ├── __init__.py
+│           └── educational.py     # Education-specific patterns
 ├── tests/
-│   ├── fixtures/                  # Sample documents for testing
-│   ├── test_grammar.py
-│   ├── test_names.py
-│   ├── test_anonymization.py
-│   └── test_pipeline_integration.py
-└── scripts/
-    ├── process_batch.py           # CLI for batch processing
-    └── setup_languagetool.py      # One-time setup
+│   ├── conftest.py                # Test fixtures
+│   ├── test_stage_2.py            # Name matching tests
+│   ├── test_stage_3.py            # Anonymization tests
+│   ├── test_stage_4.py            # Semantic analysis tests
+│   └── test_integration.py        # Pipeline integration tests
+└── sample_data/                   # Sample documents for testing
+    └── outputs/                   # Processing outputs
 ```
 
 ## Quick Start
 
 ```bash
 # 1. Clone and setup
-cd ferpa-comment-feedback
+cd "FERPA Comment system"
 python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
 
-# 2. Configure
-cp .env.example .env
-# Edit .env with your settings
+# 2. Run on a document
+ferpa-feedback process sample_data/document.docx --roster sample_data/roster.csv
 
-# 3. Setup LanguageTool (one-time)
-python scripts/setup_languagetool.py
-
-# 4. Run on sample document
-python -m ferpa_feedback.pipeline --input sample.docx --roster roster.csv
-
-# 5. Review results
-python -m ferpa_feedback.review_server
+# 3. Run tests
+pytest tests/
 ```
 
 ## FERPA Compliance Guarantees
@@ -120,7 +106,7 @@ python -m ferpa_feedback.review_server
 
 ## Configuration
 
-### `config/settings.yaml`
+### `settings.yaml`
 ```yaml
 pipeline:
   stages:
@@ -132,7 +118,7 @@ pipeline:
 ferpa:
   anonymize_before_api: true  # NEVER set to false
   log_all_api_calls: true
-  
+
 confidence_thresholds:
   auto_accept: 0.95
   human_review: 0.70
@@ -141,7 +127,16 @@ confidence_thresholds:
 
 ## Development
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
+```bash
+# Install dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest tests/
+
+# Run linting
+ruff check src/
+```
 
 ## License
 

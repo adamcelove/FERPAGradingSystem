@@ -37,5 +37,27 @@ ENV/
 .DS_Store
 Thumbs.db
 
+# Testing/Coverage
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Type checking
+.mypy_cache/
+
+# Linting
+.ruff_cache/
+
 # Project specific
 *.log
+
+# Word temp files
+~$*.docx
+~$*.xlsx
+~$*.xls
+
+# Sample data - NEVER commit real student data
+# This folder contains FERPA-protected information
+sample_data/

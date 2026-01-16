@@ -7,7 +7,7 @@ name = "ferpa-feedback"
 version = "0.1.0"
 description = "FERPA-compliant teacher comment feedback system"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 license = {text = "Proprietary"}
 authors = [
     {name = "Educational Technology Team"}
@@ -15,6 +15,7 @@ authors = [
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Education",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -75,13 +76,17 @@ ferpa-feedback = "ferpa_feedback.cli:app"
 where = ["src"]
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py39"
 line-length = 100
+
+[tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM"]
-ignore = ["E501"]
+# B008: typer CLI pattern uses function calls in defaults
+# UP006, UP007, UP035, UP037, UP045: Keep Python 3.9 compatible type annotations
+ignore = ["E501", "B008", "UP006", "UP007", "UP035", "UP037", "UP045"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.9"
 strict = true
 ignore_missing_imports = true
 

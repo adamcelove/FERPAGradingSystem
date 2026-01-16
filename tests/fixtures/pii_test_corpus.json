@@ -1,0 +1,151 @@
+{
+  "description": "Test corpus for PII recall testing. Each entry contains text with known PII and the expected detections. NOTE: DATE/DATE_TIME is intentionally excluded as it is not considered PII for FERPA compliance.",
+  "recall_target": 0.95,
+  "test_cases": [
+    {
+      "id": "email_001",
+      "text": "Please contact the student's parent at john.smith@email.com for updates.",
+      "expected_pii": [
+        {"type": "EMAIL", "value": "john.smith@email.com", "start": 42, "end": 62}
+      ]
+    },
+    {
+      "id": "email_002",
+      "text": "Send homework to student_name123@school.edu by Friday.",
+      "expected_pii": [
+        {"type": "EMAIL", "value": "student_name123@school.edu", "start": 17, "end": 43}
+      ]
+    },
+    {
+      "id": "phone_001",
+      "text": "Call the parent at 555-123-4567 if the student is absent.",
+      "expected_pii": [
+        {"type": "PHONE", "value": "555-123-4567", "start": 19, "end": 31}
+      ]
+    },
+    {
+      "id": "phone_002",
+      "text": "Emergency contact: (800) 555-9999 for immediate assistance.",
+      "expected_pii": [
+        {"type": "PHONE", "value": "(800) 555-9999", "start": 19, "end": 33}
+      ]
+    },
+    {
+      "id": "phone_003",
+      "text": "Call +1-555-987-6543 to speak with the guidance counselor.",
+      "expected_pii": [
+        {"type": "PHONE", "value": "+1-555-987-6543", "start": 5, "end": 20}
+      ]
+    },
+    {
+      "id": "ssn_001",
+      "text": "The student's SSN 123-45-6789 was incorrectly entered in the system.",
+      "expected_pii": [
+        {"type": "SSN", "value": "123-45-6789", "start": 18, "end": 29}
+      ]
+    },
+    {
+      "id": "ssn_002",
+      "text": "Social Security Number: 987-65-4321 needs verification.",
+      "expected_pii": [
+        {"type": "SSN", "value": "987-65-4321", "start": 24, "end": 35}
+      ]
+    },
+    {
+      "id": "student_id_001",
+      "text": "Student ID: 12345678 is enrolled in AP Chemistry.",
+      "expected_pii": [
+        {"type": "STUDENT_ID", "value": "Student ID: 12345678", "start": 0, "end": 20}
+      ]
+    },
+    {
+      "id": "student_id_002",
+      "text": "Please update the record for student-id: 987654321 immediately.",
+      "expected_pii": [
+        {"type": "STUDENT_ID", "value": "student-id: 987654321", "start": 31, "end": 52}
+      ]
+    },
+    {
+      "id": "student_id_003",
+      "text": "Contact S12345678 about their missing assignment.",
+      "expected_pii": [
+        {"type": "STUDENT_ID_BARE", "value": "S12345678", "start": 8, "end": 17}
+      ]
+    },
+    {
+      "id": "student_id_004",
+      "text": "Student S987654321 achieved perfect attendance this semester.",
+      "expected_pii": [
+        {"type": "STUDENT_ID_BARE", "value": "S987654321", "start": 8, "end": 18}
+      ]
+    },
+    {
+      "id": "combined_001",
+      "text": "John's parent email is jane.doe@gmail.com and phone is 555-111-2222.",
+      "expected_pii": [
+        {"type": "EMAIL", "value": "jane.doe@gmail.com", "start": 23, "end": 41},
+        {"type": "PHONE", "value": "555-111-2222", "start": 55, "end": 67}
+      ]
+    },
+    {
+      "id": "combined_002",
+      "text": "Student ID: 11112222 born 6/1/2012 needs parent contact at 123-456-7890.",
+      "expected_pii": [
+        {"type": "STUDENT_ID", "value": "Student ID: 11112222", "start": 0, "end": 20},
+        {"type": "PHONE", "value": "123-456-7890", "start": 59, "end": 71}
+      ]
+    },
+    {
+      "id": "combined_003",
+      "text": "Record for S55566677: SSN 111-22-3333, email test@example.org.",
+      "expected_pii": [
+        {"type": "STUDENT_ID_BARE", "value": "S55566677", "start": 11, "end": 20},
+        {"type": "SSN", "value": "111-22-3333", "start": 26, "end": 37},
+        {"type": "EMAIL", "value": "test@example.org", "start": 45, "end": 61}
+      ]
+    },
+    {
+      "id": "no_pii_001",
+      "text": "The student shows excellent progress in mathematics and reading.",
+      "expected_pii": []
+    },
+    {
+      "id": "no_pii_002",
+      "text": "Please encourage continued participation in class discussions.",
+      "expected_pii": []
+    },
+    {
+      "id": "edge_case_001",
+      "text": "Send updates to parent.email@company-name.co.uk regarding progress.",
+      "expected_pii": [
+        {"type": "EMAIL", "value": "parent.email@company-name.co.uk", "start": 16, "end": 47}
+      ]
+    },
+    {
+      "id": "edge_case_002",
+      "text": "Contact 1.800.555.1234 for the main office.",
+      "expected_pii": [
+        {"type": "PHONE", "value": "1.800.555.1234", "start": 8, "end": 22}
+      ]
+    }
+  ],
+  "metadata": {
+    "total_test_cases": 18,
+    "total_expected_pii": 21,
+    "pii_type_distribution": {
+      "EMAIL": 6,
+      "PHONE": 6,
+      "SSN": 3,
+      "STUDENT_ID": 3,
+      "STUDENT_ID_BARE": 3
+    },
+    "note": "DATE/DATE_TIME intentionally excluded - not considered PII for FERPA compliance",
+    "false_positive_documentation": {
+      "description": "False positives are documented during test execution and tracked as informational metrics rather than test failures. For FERPA compliance, high recall (catching all real PII) is prioritized over low false positive rate.",
+      "acceptable_fp_types": [
+        "Phone-like number sequences",
+        "Email-like patterns in URLs"
+      ]
+    }
+  }
+}
