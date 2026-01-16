@@ -451,7 +451,7 @@ Add comprehensive test coverage for critical stages.
 
 ### 3.2 Stage 2 Tests
 
-- [ ] 3.2.1 Add unit tests for name extraction
+- [x] 3.2.1 Add unit tests for name extraction
   - **Do**: Test name extraction functionality
     1. Create `tests/test_stage_2.py`
     2. Add tests for GLiNER extraction
