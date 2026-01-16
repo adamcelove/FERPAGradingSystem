@@ -119,6 +119,16 @@ class PIIDetector:
         "STUDENT_ID_BARE": re.compile(r'\b[Ss]\d{7,9}\b'),
     }
 
+    # Common English words that should NOT be matched as names even if they're nicknames
+    # These are words that appear frequently in teacher comments
+    COMMON_WORD_EXCLUSIONS = {
+        "will", "bill", "bob", "rob", "pat", "art", "ray", "joy", "may",
+        "mark", "nick", "jack", "dick", "frank", "grace", "hope", "faith",
+        "gene", "jean", "sue", "dawn", "don", "drew", "dean", "grant",
+        "wade", "chase", "chance", "clay", "cliff", "dale", "glen", "lane",
+        "miles", "pierce", "reed", "sterling", "troy", "wade", "ward",
+    }
+
     def __init__(
         self,
         roster: ClassRoster | None = None,
@@ -143,7 +153,10 @@ class PIIDetector:
         self.school_patterns = school_patterns
         self.score_threshold = score_threshold
         self._presidio_analyzer: Any | None = None
-        self._roster_patterns: list[tuple[Pattern[str], str]] = []
+        # Each pattern tuple: (pattern, canonical_name, is_explicit_roster_entry)
+        # is_explicit_roster_entry=True means it's from direct roster data (first/last/preferred name)
+        # is_explicit_roster_entry=False means it's from nickname expansion
+        self._roster_patterns: list[tuple[Pattern[str], str, bool]] = []
 
         if roster:
             self._build_roster_patterns()
@@ -195,35 +208,50 @@ class PIIDetector:
         from ferpa_feedback.stage_2_names import FORMAL_TO_NICKNAMES, NICKNAME_MAP
 
         for student in self.roster.students:
-            # Start with all base variants from the roster entry
-            all_variants: set[str] = set(student.all_name_variants)
+            # Get explicit roster variants (these are always matched)
+            explicit_variants: set[str] = set(student.all_name_variants)
 
             # Get first and last name for nickname expansion
             first_name = student.first_name.lower()
             last_name = student.last_name.lower()
 
+            # Track expanded nicknames separately (subject to common word filtering)
+            expanded_variants: set[str] = set()
+
             # If first name is a formal name, add all its nicknames
             # e.g., "William" -> also add "Will", "Bill", "Billy", "Willy"
             if first_name in FORMAL_TO_NICKNAMES:
                 for nickname in FORMAL_TO_NICKNAMES[first_name]:
-                    all_variants.add(nickname)
-                    all_variants.add(f"{nickname} {last_name}")
+                    # Only add if not already an explicit variant
+                    if nickname.lower() not in {v.lower() for v in explicit_variants}:
+                        expanded_variants.add(nickname)
+                        expanded_variants.add(f"{nickname} {last_name}")
 
             # If first name is a nickname, add the formal name
             # e.g., "Will" -> also add "William"
             if first_name in NICKNAME_MAP:
                 for formal_name in NICKNAME_MAP[first_name]:
-                    all_variants.add(formal_name)
-                    all_variants.add(f"{formal_name} {last_name}")
+                    if formal_name.lower() not in {v.lower() for v in explicit_variants}:
+                        expanded_variants.add(formal_name)
+                        expanded_variants.add(f"{formal_name} {last_name}")
 
-            # Create patterns for all variants
-            for variant in all_variants:
+            # Create patterns for explicit variants (always matched)
+            for variant in explicit_variants:
                 if len(variant) >= 2:  # Skip single-character names
                     pattern = re.compile(
                         r'\b' + re.escape(variant) + r'\b',
                         re.IGNORECASE,
                     )
-                    self._roster_patterns.append((pattern, student.full_name))
+                    self._roster_patterns.append((pattern, student.full_name, True))
+
+            # Create patterns for expanded variants (subject to common word filtering)
+            for variant in expanded_variants:
+                if len(variant) >= 2:  # Skip single-character names
+                    pattern = re.compile(
+                        r'\b' + re.escape(variant) + r'\b',
+                        re.IGNORECASE,
+                    )
+                    self._roster_patterns.append((pattern, student.full_name, False))
 
         logger.debug("roster_patterns_built", count=len(self._roster_patterns))
 
@@ -231,6 +259,31 @@ class PIIDetector:
         """Update roster and rebuild patterns."""
         self.roster = roster
         self._build_roster_patterns()
+
+    def _is_common_word_in_context(self, text: str, start: int, end: int) -> bool:
+        """
+        Check if the matched text appears to be a common word rather than a name.
+
+        A word is likely a common word (not a name) if:
+        - It's lowercase in the original text (names are typically capitalized)
+        - It appears in a context that suggests it's not a name
+
+        Args:
+            text: Full text being analyzed
+            start: Start position of match
+            end: End position of match
+
+        Returns:
+            True if this appears to be a common word usage, not a name
+        """
+        matched = text[start:end]
+
+        # If the word is all lowercase, it's likely a common word usage
+        # Names are typically capitalized (e.g., "Will" vs "will")
+        if matched.islower():
+            return True
+
+        return False
 
     def detect(self, text: str) -> list[dict[str, Any]]:
         """
@@ -245,10 +298,19 @@ class PIIDetector:
         detections = []
 
         # 1. Roster-based detection (highest priority)
-        for pattern, canonical_name in self._roster_patterns:
+        for pattern, canonical_name, is_explicit in self._roster_patterns:
             for match in pattern.finditer(text):
+                matched_text = match.group()
+
+                # Skip common English words when they appear in lowercase
+                # e.g., "will" (modal verb) vs "Will" (name)
+                # This applies to both explicit and expanded patterns for short words
+                if matched_text.lower() in self.COMMON_WORD_EXCLUSIONS:
+                    if self._is_common_word_in_context(text, match.start(), match.end()):
+                        continue
+
                 detections.append({
-                    "text": match.group(),
+                    "text": matched_text,
                     "canonical": canonical_name,
                     "start": match.start(),
                     "end": match.end(),
@@ -311,7 +373,23 @@ class PIIDetector:
             return int(start_val) if start_val is not None else 0
         detections.sort(key=get_start)
 
-        return detections
+        # Deduplicate overlapping detections
+        # When multiple patterns match the same position (e.g., two students named "Michael"),
+        # keep only one detection to avoid corrupting placeholders during replacement
+        deduplicated: list[dict[str, Any]] = []
+        for detection in detections:
+            # Check if this detection overlaps with any already-kept detection
+            overlaps = False
+            for kept in deduplicated:
+                # Check for any overlap between the two spans
+                if (detection["start"] < kept["end"] and detection["end"] > kept["start"]):
+                    overlaps = True
+                    break
+
+            if not overlaps:
+                deduplicated.append(detection)
+
+        return deduplicated
 
 
 class Anonymizer:
