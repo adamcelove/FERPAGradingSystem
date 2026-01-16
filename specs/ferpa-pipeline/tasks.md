@@ -547,7 +547,7 @@ Add comprehensive test coverage for critical stages.
 
 ### 3.5 Integration Tests
 
-- [ ] 3.5.1 Add pipeline integration tests
+- [x] 3.5.1 Add pipeline integration tests
   - **Do**: Test full pipeline integration
     1. Create `tests/test_integration.py`
     2. Add test for full pipeline with sample document
