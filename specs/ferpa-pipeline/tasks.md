@@ -54,7 +54,7 @@ Focus: Get the pipeline running end-to-end by fixing structure, creating missing
   - _Requirements: FR-3, AC-3.1_
   - _Design: Phase 1: Structure Fix_
 
-- [ ] 1.2.2 Create unified stage_0_ingestion.py using models.py StudentComment
+- [x] 1.2.2 Create unified stage_0_ingestion.py using models.py StudentComment
   - **Do**: Create stage 0 that uses the unified Pydantic StudentComment from models.py instead of the dataclass
     1. Create `src/ferpa_feedback/stage_0_ingestion.py` based on `stage_0_ingestion_improved.py`
     2. Remove the local dataclass StudentComment definition (lines 55-79)
