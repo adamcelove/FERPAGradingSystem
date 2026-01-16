@@ -532,7 +532,7 @@ Add comprehensive test coverage for critical stages.
   - _Requirements: FR-10, AC-5.4, NFR-6_
   - _Design: Unit Tests - TestFERPAGateEnforcement_
 
-- [ ] 3.4.2 Add semantic analysis tests (mocked API)
+- [x] 3.4.2 Add semantic analysis tests (mocked API)
   - **Do**: Test semantic analysis with mocked Claude API
     1. Add mock fixtures for Anthropic client
     2. Add test for completeness scoring

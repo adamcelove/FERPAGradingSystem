@@ -333,3 +333,363 @@ class TestFERPAEdgeCases:
         # Should raise FERPAViolationError, not make API call
         with pytest.raises(FERPAViolationError):
             client.analyze(comment, "Test: {comment_text}")
+
+
+# ============================================================================
+# TestSemanticAnalysis
+# ============================================================================
+
+
+class TestSemanticAnalysis:
+    """Tests for semantic analysis with mocked Claude API."""
+
+    @pytest.fixture
+    def mock_anthropic_client(self):
+        """Create a mock for the Anthropic client.
+
+        Returns a mock that can be configured to return specific responses
+        for completeness and consistency analysis.
+        """
+        mock_client = MagicMock()
+
+        # Create a mock response structure
+        def create_mock_response(text_content):
+            mock_response = MagicMock()
+            mock_content_block = MagicMock()
+            mock_content_block.text = text_content
+            mock_response.content = [mock_content_block]
+            mock_response.model = "claude-sonnet-4-20250514"
+            return mock_response
+
+        mock_client.messages.create = MagicMock(
+            side_effect=lambda **kwargs: create_mock_response(
+                # Default response, can be overridden in individual tests
+                '{"specificity_score": 0.8, "actionability_score": 0.7, '
+                '"evidence_score": 0.9, "length_score": 0.6, "tone_score": 0.85, '
+                '"missing_elements": [], "explanation": "Mock response"}'
+            )
+        )
+        mock_client._create_mock_response = create_mock_response
+        return mock_client
+
+    @pytest.fixture
+    def ferpa_enforced_client_with_mock(
+        self, mock_anthropic_client, ferpa_gate
+    ):
+        """Create a FERPAEnforcedClient with mocked Anthropic client."""
+        client = FERPAEnforcedClient(
+            api_key="test-key",
+            gate=ferpa_gate,
+            enable_zdr=True,
+        )
+        # Inject the mock client
+        client._client = mock_anthropic_client
+        return client
+
+    def test_completeness_scoring(
+        self,
+        mock_anthropic_client,
+        ferpa_enforced_client_with_mock,
+        comment_clean_anonymized,
+    ):
+        """Test that CompletenessAnalyzer correctly scores comments with mocked API."""
+        from ferpa_feedback.stage_4_semantic import CompletenessAnalyzer
+        from ferpa_feedback.models import ConfidenceLevel
+
+        # Configure mock response for completeness analysis
+        completeness_response = (
+            '{"specificity_score": 0.85, "actionability_score": 0.75, '
+            '"evidence_score": 0.90, "length_score": 0.70, "tone_score": 0.80, '
+            '"missing_elements": ["more examples"], '
+            '"explanation": "Good feedback but could use more specific examples"}'
+        )
+        mock_anthropic_client.messages.create = MagicMock(
+            return_value=mock_anthropic_client._create_mock_response(
+                completeness_response
+            )
+        )
+
+        # Create analyzer with the mocked client
+        analyzer = CompletenessAnalyzer(
+            client=ferpa_enforced_client_with_mock,
+            rubric_path=None,
+        )
+
+        # Analyze the comment
+        result = analyzer.analyze(comment_clean_anonymized)
+
+        # Verify the result structure
+        assert result is not None
+        assert result.specificity_score == 0.85
+        assert result.actionability_score == 0.75
+        assert result.evidence_score == 0.90
+        assert result.length_score == 0.70
+        assert result.tone_score == 0.80
+
+        # Verify overall score calculation (weighted average)
+        # specificity * 0.25 + actionability * 0.25 + evidence * 0.20 + length * 0.15 + tone * 0.15
+        expected_score = (
+            0.85 * 0.25 +
+            0.75 * 0.25 +
+            0.90 * 0.20 +
+            0.70 * 0.15 +
+            0.80 * 0.15
+        )
+        assert abs(result.score - expected_score) < 0.01
+
+        # Verify is_complete based on threshold (>= 0.6)
+        assert result.is_complete is True
+
+        # Verify missing elements were captured
+        assert "more examples" in result.missing_elements
+
+        # Verify explanation was captured
+        assert "specific examples" in result.explanation
+
+        # Verify API was called
+        mock_anthropic_client.messages.create.assert_called_once()
+
+    def test_completeness_scoring_low_score(
+        self,
+        mock_anthropic_client,
+        ferpa_enforced_client_with_mock,
+        comment_clean_anonymized,
+    ):
+        """Test that CompletenessAnalyzer correctly identifies incomplete comments."""
+        from ferpa_feedback.stage_4_semantic import CompletenessAnalyzer
+
+        # Configure mock response for a low-scoring comment
+        low_score_response = (
+            '{"specificity_score": 0.3, "actionability_score": 0.2, '
+            '"evidence_score": 0.1, "length_score": 0.4, "tone_score": 0.5, '
+            '"missing_elements": ["specific examples", "actionable feedback", "evidence"], '
+            '"explanation": "Comment is too vague and lacks actionable guidance"}'
+        )
+        mock_anthropic_client.messages.create = MagicMock(
+            return_value=mock_anthropic_client._create_mock_response(
+                low_score_response
+            )
+        )
+
+        analyzer = CompletenessAnalyzer(
+            client=ferpa_enforced_client_with_mock,
+        )
+
+        result = analyzer.analyze(comment_clean_anonymized)
+
+        # With low scores, overall should be below 0.6 threshold
+        assert result.is_complete is False
+        assert result.score < 0.6
+
+        # Verify missing elements captured
+        assert len(result.missing_elements) == 3
+
+    def test_consistency_detection_consistent(
+        self,
+        mock_anthropic_client,
+        ferpa_enforced_client_with_mock,
+        comment_clean_anonymized,
+    ):
+        """Test that ConsistencyAnalyzer detects consistent grade-comment pairs."""
+        from ferpa_feedback.stage_4_semantic import ConsistencyAnalyzer
+        from ferpa_feedback.models import ConfidenceLevel
+
+        # Configure mock response for consistent analysis
+        # Comment has grade "C" and should have constructive sentiment
+        consistent_response = (
+            '{"is_consistent": true, "grade_sentiment": "neutral", '
+            '"comment_sentiment": "neutral", "conflicting_phrases": [], '
+            '"explanation": "The comment provides constructive feedback appropriate for a C grade"}'
+        )
+        mock_anthropic_client.messages.create = MagicMock(
+            return_value=mock_anthropic_client._create_mock_response(
+                consistent_response
+            )
+        )
+
+        analyzer = ConsistencyAnalyzer(
+            client=ferpa_enforced_client_with_mock,
+        )
+
+        result = analyzer.analyze(
+            comment_clean_anonymized,
+            grade=comment_clean_anonymized.grade,
+        )
+
+        # Verify consistency detected
+        assert result.is_consistent is True
+        assert result.grade_sentiment == "neutral"
+        assert result.comment_sentiment == "neutral"
+        assert len(result.conflicting_phrases) == 0
+
+        # When sentiments match, confidence should be HIGH
+        assert result.confidence == ConfidenceLevel.HIGH
+
+    def test_consistency_detection_inconsistent(
+        self,
+        mock_anthropic_client,
+        ferpa_enforced_client_with_mock,
+        comment_clean_anonymized,
+    ):
+        """Test that ConsistencyAnalyzer detects misaligned grade-comment pairs."""
+        from ferpa_feedback.stage_4_semantic import ConsistencyAnalyzer
+        from ferpa_feedback.models import ConfidenceLevel
+
+        # Configure mock response for inconsistent analysis
+        # A failing grade with overly positive comments
+        inconsistent_response = (
+            '{"is_consistent": false, "grade_sentiment": "negative", '
+            '"comment_sentiment": "positive", '
+            '"conflicting_phrases": ["excellent work", "outstanding performance"], '
+            '"explanation": "Comment is overly positive for a failing grade"}'
+        )
+        mock_anthropic_client.messages.create = MagicMock(
+            return_value=mock_anthropic_client._create_mock_response(
+                inconsistent_response
+            )
+        )
+
+        analyzer = ConsistencyAnalyzer(
+            client=ferpa_enforced_client_with_mock,
+        )
+
+        # Analyze with a failing grade
+        result = analyzer.analyze(
+            comment_clean_anonymized,
+            grade="F",
+        )
+
+        # Verify inconsistency detected
+        assert result.is_consistent is False
+        assert result.grade_sentiment == "negative"
+        assert result.comment_sentiment == "positive"
+        assert len(result.conflicting_phrases) == 2
+        assert "excellent work" in result.conflicting_phrases
+
+        # Clear misalignment should have HIGH confidence
+        assert result.confidence == ConfidenceLevel.HIGH
+
+    def test_consistency_detection_ambiguous(
+        self,
+        mock_anthropic_client,
+        ferpa_enforced_client_with_mock,
+        comment_clean_anonymized,
+    ):
+        """Test that ConsistencyAnalyzer handles ambiguous sentiment with MEDIUM confidence."""
+        from ferpa_feedback.stage_4_semantic import ConsistencyAnalyzer
+        from ferpa_feedback.models import ConfidenceLevel
+
+        # Configure mock response with mixed/ambiguous sentiment
+        ambiguous_response = (
+            '{"is_consistent": true, "grade_sentiment": "mixed", '
+            '"comment_sentiment": "neutral", "conflicting_phrases": [], '
+            '"explanation": "Grade and comment have ambiguous alignment"}'
+        )
+        mock_anthropic_client.messages.create = MagicMock(
+            return_value=mock_anthropic_client._create_mock_response(
+                ambiguous_response
+            )
+        )
+
+        analyzer = ConsistencyAnalyzer(
+            client=ferpa_enforced_client_with_mock,
+        )
+
+        result = analyzer.analyze(
+            comment_clean_anonymized,
+            grade="B-",
+        )
+
+        # Ambiguous sentiment should result in MEDIUM confidence
+        assert result.is_consistent is True
+        assert result.confidence == ConfidenceLevel.MEDIUM
+
+    def test_semantic_analyzer_without_client_returns_stub(
+        self,
+        comment_clean_anonymized,
+    ):
+        """Test that analyzers return stub results when no client is provided."""
+        from ferpa_feedback.stage_4_semantic import (
+            CompletenessAnalyzer,
+            ConsistencyAnalyzer,
+        )
+        from ferpa_feedback.models import ConfidenceLevel
+
+        # Create analyzers without client
+        completeness_analyzer = CompletenessAnalyzer(client=None)
+        consistency_analyzer = ConsistencyAnalyzer(client=None)
+
+        # Analyze should return stub results
+        completeness = completeness_analyzer.analyze(comment_clean_anonymized)
+        consistency = consistency_analyzer.analyze(
+            comment_clean_anonymized,
+            grade=comment_clean_anonymized.grade,
+        )
+
+        # Verify stub results
+        assert completeness.confidence == ConfidenceLevel.UNKNOWN
+        assert completeness.explanation == "API unavailable - using stub analysis"
+
+        assert consistency.confidence == ConfidenceLevel.UNKNOWN
+        assert consistency.explanation == "API unavailable - using stub analysis"
+
+    def test_semantic_analyzer_handles_malformed_json(
+        self,
+        mock_anthropic_client,
+        ferpa_enforced_client_with_mock,
+        comment_clean_anonymized,
+    ):
+        """Test that analyzers handle malformed JSON responses gracefully."""
+        from ferpa_feedback.stage_4_semantic import CompletenessAnalyzer
+        from ferpa_feedback.models import ConfidenceLevel
+
+        # Configure mock to return malformed JSON
+        mock_anthropic_client.messages.create = MagicMock(
+            return_value=mock_anthropic_client._create_mock_response(
+                "This is not valid JSON at all"
+            )
+        )
+
+        analyzer = CompletenessAnalyzer(
+            client=ferpa_enforced_client_with_mock,
+        )
+
+        result = analyzer.analyze(comment_clean_anonymized)
+
+        # Should fall back to stub result
+        assert result.confidence == ConfidenceLevel.UNKNOWN
+        assert "stub" in result.explanation.lower() or "unavailable" in result.explanation.lower()
+
+    def test_semantic_analyzer_handles_markdown_json(
+        self,
+        mock_anthropic_client,
+        ferpa_enforced_client_with_mock,
+        comment_clean_anonymized,
+    ):
+        """Test that analyzers correctly parse JSON wrapped in markdown code blocks."""
+        from ferpa_feedback.stage_4_semantic import CompletenessAnalyzer
+
+        # Configure mock to return JSON in markdown code block
+        markdown_response = (
+            '```json\n'
+            '{"specificity_score": 0.9, "actionability_score": 0.85, '
+            '"evidence_score": 0.8, "length_score": 0.75, "tone_score": 0.9, '
+            '"missing_elements": [], "explanation": "Excellent feedback"}\n'
+            '```'
+        )
+        mock_anthropic_client.messages.create = MagicMock(
+            return_value=mock_anthropic_client._create_mock_response(
+                markdown_response
+            )
+        )
+
+        analyzer = CompletenessAnalyzer(
+            client=ferpa_enforced_client_with_mock,
+        )
+
+        result = analyzer.analyze(comment_clean_anonymized)
+
+        # Should successfully parse the markdown-wrapped JSON
+        assert result.specificity_score == 0.9
+        assert result.actionability_score == 0.85
+        assert "Excellent feedback" in result.explanation
