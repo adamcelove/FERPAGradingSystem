@@ -409,7 +409,7 @@ After POC validated, clean up code and implement full functionality.
 
 ### 2.6 Dependency Audit
 
-- [ ] 2.6.1 Audit and document dependencies
+- [x] 2.6.1 Audit and document dependencies
   - **Do**: Verify all pyproject.toml dependencies are used
     1. Create audit of each dependency and its usage
     2. Verify GLiNER is used by Stage 2
