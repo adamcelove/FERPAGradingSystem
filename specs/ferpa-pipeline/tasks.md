@@ -70,7 +70,7 @@ Focus: Get the pipeline running end-to-end by fixing structure, creating missing
   - _Requirements: FR-3, AC-3.2, AC-3.3_
   - _Design: Stage 0 Interface_
 
-- [ ] 1.2.3 Move stage_1_grammar.py to src/ferpa_feedback/
+- [x] 1.2.3 Move stage_1_grammar.py to src/ferpa_feedback/
   - **Do**: Copy grammar stage to new location, update imports
     1. Copy `stage_1_grammar.py` to `src/ferpa_feedback/stage_1_grammar.py`
     2. Import path already correct: `from ferpa_feedback.models import ...`
