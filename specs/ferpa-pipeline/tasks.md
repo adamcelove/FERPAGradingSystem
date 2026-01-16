@@ -185,7 +185,7 @@ Focus: Get the pipeline running end-to-end by fixing structure, creating missing
   - _Requirements: FR-1, AC-1.3_
   - _Design: CLI Module_
 
-- [ ] 1.5.2 Quality Checkpoint
+- [x] 1.5.2 Quality Checkpoint
   - **Do**: Run quality checks after CLI implementation
   - **Verify**: All commands must pass:
     - CLI help: `cd src && python -m ferpa_feedback.cli --help`
@@ -195,7 +195,7 @@ Focus: Get the pipeline running end-to-end by fixing structure, creating missing
 
 ### 1.6 Implement Stage 4 - Semantic Analysis (Stub)
 
-- [ ] 1.6.1 Create stage_4_semantic.py with FERPA-enforced client
+- [x] 1.6.1 Create stage_4_semantic.py with FERPA-enforced client
   - **Do**: Create Stage 4 module with FERPA gate enforcement
     1. Create `src/ferpa_feedback/stage_4_semantic.py`
     2. Implement `FERPAViolationError` exception
