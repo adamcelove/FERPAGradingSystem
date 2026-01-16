@@ -134,7 +134,7 @@ Focus: Get the pipeline running end-to-end by fixing structure, creating missing
   - _Requirements: FR-4, AC-2.2_
   - _Design: GLiNERExtractor interface_
 
-- [ ] 1.3.3 Add rapidfuzz name matching
+- [x] 1.3.3 Add rapidfuzz name matching
   - **Do**: Implement NameMatcher with fuzzy matching using rapidfuzz
     1. Update `NameMatcher` class to use `rapidfuzz.fuzz.token_sort_ratio`
     2. Implement configurable threshold (default 85)

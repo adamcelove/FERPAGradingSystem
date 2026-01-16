@@ -244,16 +244,17 @@ class NameMatcher:
             score: Similarity score (0-100)
 
         Returns:
-            ConfidenceLevel based on score thresholds
+            ConfidenceLevel based on score thresholds:
+            - HIGH: score >= 90
+            - MEDIUM: score >= threshold (default 85)
+            - LOW: score < threshold
         """
-        if score >= 95:
+        if score >= 90:
             return ConfidenceLevel.HIGH
-        elif score >= 80:
+        elif score >= self.threshold:
             return ConfidenceLevel.MEDIUM
-        elif score >= 60:
-            return ConfidenceLevel.LOW
         else:
-            return ConfidenceLevel.UNKNOWN
+            return ConfidenceLevel.LOW
 
 
 class NameVerificationProcessor:
