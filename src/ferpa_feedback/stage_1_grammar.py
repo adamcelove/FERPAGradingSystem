@@ -99,13 +99,13 @@ class GrammarChecker:
 
         for match in matches:
             # Skip disabled rules
-            if match.ruleId in self.disabled_rules:
+            if match.rule_id in self.disabled_rules:
                 continue
 
             # Skip custom dictionary words (for spelling rules)
-            if match.ruleId.startswith("MORFOLOGIK") or match.ruleId.startswith("SPELLING"):
+            if match.rule_id.startswith("MORFOLOGIK") or match.rule_id.startswith("SPELLING"):
                 # Extract the misspelled word
-                misspelled = text[match.offset:match.offset + match.errorLength].lower()
+                misspelled = text[match.offset:match.offset + match.error_length].lower()
                 if misspelled in self.custom_dictionary:
                     continue
 
@@ -113,11 +113,11 @@ class GrammarChecker:
             confidence = self._calculate_confidence(match)
 
             issue = GrammarIssue(
-                rule_id=match.ruleId,
+                rule_id=match.rule_id,
                 message=match.message,
                 context=match.context,
                 offset=match.offset,
-                length=match.errorLength,
+                length=match.error_length,
                 suggestions=match.replacements[:5] if match.replacements else [],
                 confidence=confidence,
             )
@@ -148,7 +148,7 @@ class GrammarChecker:
         ]
 
         # Get rule category from ID
-        rule_id = match.ruleId.upper()
+        rule_id = match.rule_id.upper()
 
         if any(cat in rule_id for cat in high_confidence_categories):
             return 0.95

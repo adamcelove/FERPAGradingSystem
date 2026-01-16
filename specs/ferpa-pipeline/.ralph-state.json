@@ -1,0 +1,13 @@
+{
+  "source": "spec",
+  "name": "ferpa-pipeline",
+  "basePath": "./specs/ferpa-pipeline",
+  "phase": "execution",
+  "taskIndex": 42,
+  "totalTasks": 46,
+  "taskIteration": 1,
+  "maxTaskIterations": 5,
+  "globalIteration": 43,
+  "maxGlobalIterations": 100,
+  "awaitingApproval": false
+}
