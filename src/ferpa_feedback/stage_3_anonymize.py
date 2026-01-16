@@ -142,7 +142,7 @@ class PIIDetector:
         self.use_custom_recognizers = use_custom_recognizers
         self.school_patterns = school_patterns
         self.score_threshold = score_threshold
-        self._presidio_analyzer = None
+        self._presidio_analyzer: Any | None = None
         self._roster_patterns: list[tuple[Pattern[str], str]] = []
 
         if roster:
