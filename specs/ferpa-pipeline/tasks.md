@@ -94,7 +94,7 @@ Focus: Get the pipeline running end-to-end by fixing structure, creating missing
   - _Requirements: FR-1_
   - _Design: Phase 1: Structure Fix_
 
-- [ ] 1.2.5 Quality Checkpoint
+- [x] 1.2.5 Quality Checkpoint
   - **Do**: Run quality checks to verify structure changes work
   - **Verify**: All commands must pass:
     - Import check: `python -c "import sys; sys.path.insert(0, 'src'); from ferpa_feedback import models, stage_0_ingestion, stage_1_grammar, stage_3_anonymize; print('All modules loaded')"`
@@ -104,7 +104,7 @@ Focus: Get the pipeline running end-to-end by fixing structure, creating missing
 
 ### 1.3 Implement Stage 2 - Name Verification (Stub)
 
-- [ ] 1.3.1 Create stage_2_names.py with stub implementation
+- [x] 1.3.1 Create stage_2_names.py with stub implementation
   - **Do**: Create Stage 2 module with working stubs that allow pipeline to run
     1. Create `src/ferpa_feedback/stage_2_names.py`
     2. Implement `NameExtractor` protocol and `StubExtractor` class (returns empty list)
