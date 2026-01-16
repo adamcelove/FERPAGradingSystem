@@ -4,5 +4,16 @@ This module contains custom recognizers for detecting educational-context PII
 such as student IDs, grade levels, and school names.
 """
 
-# Exports will be added as recognizers are implemented
-__all__ = []
+from ferpa_feedback.recognizers.educational import (
+    StudentIDRecognizer,
+    GradeLevelRecognizer,
+    SchoolNameRecognizer,
+    PRESIDIO_AVAILABLE,
+)
+
+__all__ = [
+    "StudentIDRecognizer",
+    "GradeLevelRecognizer",
+    "SchoolNameRecognizer",
+    "PRESIDIO_AVAILABLE",
+]

@@ -290,7 +290,7 @@ After POC validated, clean up code and implement full functionality.
 
 ### 2.2 Enhance Stage 3 - Custom Presidio Recognizers
 
-- [ ] 2.2.1 Create educational PII recognizers
+- [x] 2.2.1 Create educational PII recognizers
   - **Do**: Create custom Presidio recognizers for educational context
     1. Create `src/ferpa_feedback/recognizers/educational.py`
     2. Implement `StudentIDRecognizer` with patterns
