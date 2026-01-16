@@ -260,7 +260,7 @@ After POC validated, clean up code and implement full functionality.
 
 ### 2.1 Enhance Stage 2 - Full Name Detection
 
-- [ ] 2.1.1 Add spaCy fallback extractor
+- [x] 2.1.1 Add spaCy fallback extractor
   - **Do**: Implement SpaCyExtractor as fallback when GLiNER fails
     1. Add `SpaCyExtractor` class to stage_2_names.py
     2. Implement `extract_names` using spaCy NER

@@ -35,6 +35,13 @@ try:
 except ImportError:
     GLINER_AVAILABLE = False
 
+# Try to import spacy, fall back to stub if unavailable
+try:
+    import spacy
+    SPACY_AVAILABLE = True
+except ImportError:
+    SPACY_AVAILABLE = False
+
 
 class NameExtractor(Protocol):
     """Protocol for name extraction backends."""
@@ -158,6 +165,102 @@ class GLiNERExtractor:
             return results
         except Exception:
             # If prediction fails, return empty list
+            return []
+
+    def set_roster(self, roster: ClassRoster) -> None:
+        """Update roster for context-aware extraction."""
+        self._roster = roster
+
+
+class SpaCyExtractor:
+    """spaCy-based name extractor using NER for PERSON entities.
+
+    Used as a fallback when GLiNER is not available or fails.
+    Uses lazy loading for the model to avoid expensive initialization
+    until actually needed.
+    """
+
+    def __init__(
+        self,
+        model_name: str = "en_core_web_trf",
+        roster: Optional[ClassRoster] = None,
+    ) -> None:
+        """
+        Initialize spaCy extractor.
+
+        Args:
+            model_name: spaCy model name (default: en_core_web_trf for transformer-based NER)
+            roster: Optional class roster for context-aware extraction
+        """
+        self._model_name = model_name
+        self._roster: Optional[ClassRoster] = roster
+        self._nlp: Optional["spacy.language.Language"] = None
+        self._model_load_failed = False
+
+    def _load_model(self) -> bool:
+        """
+        Lazy load the spaCy model.
+
+        Returns:
+            True if model loaded successfully, False otherwise.
+        """
+        if self._nlp is not None:
+            return True
+
+        if self._model_load_failed:
+            return False
+
+        if not SPACY_AVAILABLE:
+            self._model_load_failed = True
+            return False
+
+        try:
+            self._nlp = spacy.load(self._model_name)
+            return True
+        except OSError:
+            # Model not downloaded - try smaller model as fallback
+            try:
+                self._nlp = spacy.load("en_core_web_sm")
+                return True
+            except OSError:
+                self._model_load_failed = True
+                return False
+        except Exception:
+            # Any other error - fall back to stub behavior
+            self._model_load_failed = True
+            return False
+
+    def extract_names(self, text: str) -> List[Tuple[str, float]]:
+        """
+        Extract PERSON entities from text using spaCy NER.
+
+        Args:
+            text: Input text to extract names from.
+
+        Returns:
+            List of (name, confidence) tuples for detected PERSON entities.
+            Returns empty list if model is not available or loading fails.
+        """
+        if not self._load_model():
+            # Fall back to stub behavior
+            return []
+
+        if self._nlp is None:
+            return []
+
+        try:
+            doc = self._nlp(text)
+            results: List[Tuple[str, float]] = []
+
+            for ent in doc.ents:
+                if ent.label_ == "PERSON":
+                    # spaCy doesn't provide confidence scores by default
+                    # Use a fixed score of 0.8 as a reasonable default
+                    results.append((ent.text, 0.8))
+
+            return results
+        except Exception:
+            # If NER fails, return empty list
             return []
 
     def set_roster(self, roster: ClassRoster) -> None:
@@ -356,11 +459,17 @@ def create_name_processor(
 
     Matches the existing stage patterns (create_* factory functions).
 
+    Uses fallback pattern for extractor selection:
+    1. GLiNER (if available and model loads)
+    2. spaCy (if available and model loads)
+    3. Stub (always works, returns empty list)
+
     Args:
         roster: Optional class roster for context-aware name matching.
         config: Optional configuration dict with keys:
             - threshold: int (default 85) - minimum match score
             - algorithm: str (default "token_sort_ratio") - rapidfuzz algorithm
+            - extractor: str (optional) - force specific extractor ("gliner", "spacy", "stub")
 
     Returns:
         Configured NameVerificationProcessor instance.
@@ -371,10 +480,26 @@ def create_name_processor(
 
     threshold = config.get("threshold", 85)
     algorithm = config.get("algorithm", "token_sort_ratio")
+    forced_extractor = config.get("extractor")
 
-    # Create components
-    # For now, use StubExtractor - GLiNERExtractor will be added in task 1.3.2
-    extractor = StubExtractor(roster=roster)
+    # Create extractor with fallback pattern: GLiNER -> spaCy -> Stub
+    extractor: NameExtractor
+
+    if forced_extractor == "stub":
+        extractor = StubExtractor(roster=roster)
+    elif forced_extractor == "spacy":
+        extractor = SpaCyExtractor(roster=roster)
+    elif forced_extractor == "gliner":
+        extractor = GLiNERExtractor(roster=roster)
+    else:
+        # Auto-select with fallback pattern
+        if GLINER_AVAILABLE:
+            extractor = GLiNERExtractor(roster=roster)
+        elif SPACY_AVAILABLE:
+            extractor = SpaCyExtractor(roster=roster)
+        else:
+            extractor = StubExtractor(roster=roster)
+
     matcher = NameMatcher(threshold=threshold, algorithm=algorithm)
 
     return NameVerificationProcessor(
