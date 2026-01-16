@@ -480,8 +480,43 @@ class ConsistencyAnalyzer:
     For example, a low grade with only positive comments may indicate
     a copy-paste error or misassignment.
 
-    Stub implementation returns default values for POC.
+    Uses Claude API for real analysis with exponential backoff retry.
+    Falls back to stub if API is unavailable.
     """
+
+    # Prompt template for consistency evaluation
+    CONSISTENCY_PROMPT = """Analyze whether the following student feedback comment is consistent with the assigned grade.
+
+Grade assigned: {grade}
+
+Comment to analyze:
+"{comment_text}"
+
+Determine if the comment sentiment aligns with what you would expect for this grade level:
+- High grades (A, A+, A-, 90%+): Should have predominantly positive sentiment
+- Medium grades (B, C, 70-89%): Should have mixed or constructive sentiment
+- Low grades (D, F, below 70%): Should address concerns or areas for improvement
+
+Respond ONLY with valid JSON in this exact format:
+{{
+  "is_consistent": true,
+  "grade_sentiment": "positive",
+  "comment_sentiment": "positive",
+  "conflicting_phrases": [],
+  "explanation": "Brief explanation of the consistency assessment"
+}}
+
+Rules:
+- is_consistent: true if comment sentiment matches grade expectations, false if misaligned
+- grade_sentiment: expected sentiment based on grade ("positive", "neutral", "negative", "mixed")
+- comment_sentiment: actual sentiment detected in comment ("positive", "neutral", "negative", "mixed")
+- conflicting_phrases: list of specific phrases that conflict with the grade (empty if consistent)
+- explanation: 1-2 sentences explaining the assessment
+- Output ONLY the JSON, no other text"""
+
+    # Retry configuration: 3 retries with 1s, 2s, 4s delays
+    MAX_RETRIES = 3
+    RETRY_DELAYS = [1.0, 2.0, 4.0]
 
     def __init__(self, client: Optional[FERPAEnforcedClient] = None):
         """
@@ -494,6 +529,172 @@ class ConsistencyAnalyzer:
 
         logger.info("consistency_analyzer_initialized")
 
+    def _call_api_with_retry(
+        self,
+        comment: StudentComment,
+        grade: str,
+    ) -> Optional[dict[str, Any]]:
+        """
+        Call API with exponential backoff retry logic.
+
+        Args:
+            comment: The comment to analyze.
+            grade: The assigned grade.
+
+        Returns:
+            API response dict or None if all retries failed.
+        """
+        if self.client is None:
+            return None
+
+        last_error: Optional[Exception] = None
+
+        # Format prompt with grade
+        prompt_with_grade = self.CONSISTENCY_PROMPT.replace("{grade}", grade)
+
+        for attempt in range(self.MAX_RETRIES):
+            try:
+                response = self.client.analyze(
+                    comment=comment,
+                    prompt=prompt_with_grade,
+                    max_tokens=500,
+                )
+                return response
+
+            except Exception as e:
+                last_error = e
+                delay = self.RETRY_DELAYS[attempt] if attempt < len(self.RETRY_DELAYS) else self.RETRY_DELAYS[-1]
+
+                logger.warning(
+                    "consistency_api_retry",
+                    comment_id=comment.id,
+                    attempt=attempt + 1,
+                    max_attempts=self.MAX_RETRIES,
+                    delay_seconds=delay,
+                    error=str(e),
+                )
+
+                # Check if this is a rate limit error
+                error_str = str(e).lower()
+                if "rate" in error_str or "429" in error_str:
+                    # Double the delay for rate limits
+                    delay *= 2
+                    logger.info(
+                        "rate_limit_detected",
+                        comment_id=comment.id,
+                        extended_delay=delay,
+                    )
+
+                if attempt < self.MAX_RETRIES - 1:
+                    time.sleep(delay)
+
+        logger.error(
+            "consistency_api_failed",
+            comment_id=comment.id,
+            error=str(last_error) if last_error else "unknown",
+        )
+        return None
+
+    def _parse_response(self, response_text: str) -> Optional[dict[str, Any]]:
+        """
+        Parse JSON response from Claude API.
+
+        Args:
+            response_text: Raw text response from API.
+
+        Returns:
+            Parsed dictionary or None if parsing fails.
+        """
+        try:
+            # Try to extract JSON from response
+            text = response_text.strip()
+
+            # Handle markdown code blocks
+            if text.startswith("```"):
+                # Find the JSON content between code blocks
+                lines = text.split("\n")
+                json_lines = []
+                in_json = False
+                for line in lines:
+                    if line.startswith("```") and not in_json:
+                        in_json = True
+                        continue
+                    elif line.startswith("```") and in_json:
+                        break
+                    elif in_json:
+                        json_lines.append(line)
+                text = "\n".join(json_lines)
+
+            # Parse JSON
+            data = json.loads(text)
+            return data
+
+        except json.JSONDecodeError as e:
+            logger.warning(
+                "consistency_parse_failed",
+                error=str(e),
+                response_preview=response_text[:200],
+            )
+            return None
+
+    def _create_result_from_api(self, data: dict[str, Any]) -> ConsistencyResult:
+        """
+        Create ConsistencyResult from parsed API response.
+
+        Args:
+            data: Parsed JSON response.
+
+        Returns:
+            ConsistencyResult model.
+        """
+        # Extract fields with defaults
+        is_consistent = bool(data.get("is_consistent", True))
+        grade_sentiment = str(data.get("grade_sentiment", "neutral"))
+        comment_sentiment = str(data.get("comment_sentiment", "neutral"))
+        explanation = str(data.get("explanation", ""))
+
+        # Extract conflicting phrases
+        conflicting_phrases = data.get("conflicting_phrases", [])
+        if not isinstance(conflicting_phrases, list):
+            conflicting_phrases = []
+        conflicting_phrases = [str(phrase) for phrase in conflicting_phrases]
+
+        # Determine confidence based on sentiment clarity
+        if grade_sentiment == comment_sentiment:
+            # Clear alignment or misalignment
+            confidence = ConfidenceLevel.HIGH
+        elif grade_sentiment in ["mixed", "neutral"] or comment_sentiment in ["mixed", "neutral"]:
+            # Ambiguous sentiment
+            confidence = ConfidenceLevel.MEDIUM
+        else:
+            # Clear disagreement
+            confidence = ConfidenceLevel.HIGH if not is_consistent else ConfidenceLevel.MEDIUM
+
+        return ConsistencyResult(
+            is_consistent=is_consistent,
+            confidence=confidence,
+            grade_sentiment=grade_sentiment,
+            comment_sentiment=comment_sentiment,
+            explanation=explanation,
+            conflicting_phrases=conflicting_phrases,
+        )
+
+    def _create_stub_result(self) -> ConsistencyResult:
+        """
+        Create stub result when API is unavailable.
+
+        Returns:
+            Default ConsistencyResult.
+        """
+        return ConsistencyResult(
+            is_consistent=True,
+            confidence=ConfidenceLevel.UNKNOWN,
+            grade_sentiment="neutral",
+            comment_sentiment="neutral",
+            explanation="API unavailable - using stub analysis",
+            conflicting_phrases=[],
+        )
+
     def analyze(
         self,
         comment: StudentComment,
@@ -502,8 +703,8 @@ class ConsistencyAnalyzer:
         """
         Check if comment sentiment aligns with grade.
 
-        Stub implementation returns default values.
-        Phase 2 will implement real analysis with Claude API.
+        Uses Claude API for real analysis with exponential backoff retry.
+        Falls back to stub if API is unavailable or fails.
 
         Args:
             comment: The student comment.
@@ -512,23 +713,30 @@ class ConsistencyAnalyzer:
         Returns:
             ConsistencyResult with alignment assessment.
         """
-        # Stub: Return default consistency result
-        # Real implementation would use self.client to call Claude API
+        # Try to use real API
+        if self.client is not None:
+            response = self._call_api_with_retry(comment, grade)
 
+            if response and response.get("text"):
+                parsed = self._parse_response(response["text"])
+
+                if parsed:
+                    logger.info(
+                        "consistency_analysis_complete",
+                        comment_id=comment.id,
+                        grade=grade,
+                        used_api=True,
+                    )
+                    return self._create_result_from_api(parsed)
+
+        # Fall back to stub
         logger.debug(
             "consistency_analysis_stub",
             comment_id=comment.id,
             grade=grade,
+            reason="api_unavailable_or_failed",
         )
-
-        return ConsistencyResult(
-            is_consistent=True,
-            confidence=ConfidenceLevel.UNKNOWN,
-            grade_sentiment="neutral",
-            comment_sentiment="neutral",
-            explanation="Stub analysis - full implementation pending",
-            conflicting_phrases=[],
-        )
+        return self._create_stub_result()
 
 
 class SemanticAnalysisProcessor:
