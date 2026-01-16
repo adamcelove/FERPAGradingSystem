@@ -17,6 +17,8 @@ Key features:
 This stage is 100% local - no external API calls.
 """
 
+from __future__ import annotations
+
 import re
 from re import Pattern
 from typing import Any

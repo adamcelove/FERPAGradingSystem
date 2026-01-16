@@ -8,6 +8,8 @@ LanguageTool runs as a local Java server, ensuring all text
 processing happens on your infrastructure.
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Any
 

@@ -13,6 +13,8 @@ Key improvements over original:
 This stage is 100% local - no external API calls.
 """
 
+from __future__ import annotations
+
 import re
 import uuid
 from collections.abc import Iterator

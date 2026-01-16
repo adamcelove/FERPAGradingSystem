@@ -7,6 +7,8 @@ These recognizers extend Presidio's capabilities to better handle FERPA-protecte
 data in student feedback systems.
 """
 
+from __future__ import annotations
+
 from typing import Any
 
 PRESIDIO_AVAILABLE = False

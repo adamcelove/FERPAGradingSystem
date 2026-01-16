@@ -5,8 +5,11 @@ All data structures are defined here to ensure consistent typing
 across the pipeline stages.
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from enum import Enum
+from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -36,7 +39,7 @@ class GrammarIssue(BaseModel):
     context: str = Field(description="Text surrounding the error")
     offset: int = Field(description="Character offset in original text")
     length: int = Field(description="Length of the erroneous text")
-    suggestions: list[str] = Field(default_factory=list, description="Suggested corrections")
+    suggestions: List[str] = Field(default_factory=list, description="Suggested corrections")
     confidence: float = Field(ge=0.0, le=1.0, description="Confidence score")
 
 
@@ -78,7 +81,7 @@ class CompletenessResult(BaseModel):
     length_score: float = Field(ge=0.0, le=1.0)
     tone_score: float = Field(ge=0.0, le=1.0)
 
-    missing_elements: list[str] = Field(default_factory=list, description="What would make it complete")
+    missing_elements: List[str] = Field(default_factory=list, description="What would make it complete")
     explanation: str = Field(default="", description="LLM explanation of the assessment")
 
 
@@ -93,7 +96,7 @@ class ConsistencyResult(BaseModel):
     explanation: str = Field(default="", description="LLM explanation of the assessment")
 
     # Specific issues found
-    conflicting_phrases: list[str] = Field(default_factory=list)
+    conflicting_phrases: List[str] = Field(default_factory=list)
 
 
 class StudentComment(BaseModel):
@@ -111,18 +114,18 @@ class StudentComment(BaseModel):
     comment_text: str = Field(description="Original comment text")
 
     # Anonymized version (safe for external API)
-    anonymized_text: str | None = Field(default=None, description="PII-redacted comment")
-    anonymization_mappings: list[AnonymizationMapping] = Field(default_factory=list)
+    anonymized_text: Optional[str] = Field(default=None, description="PII-redacted comment")
+    anonymization_mappings: List[AnonymizationMapping] = Field(default_factory=list)
 
     # Analysis results
-    grammar_issues: list[GrammarIssue] = Field(default_factory=list)
-    name_match: NameMatch | None = Field(default=None)
-    completeness: CompletenessResult | None = Field(default=None)
-    consistency: ConsistencyResult | None = Field(default=None)
+    grammar_issues: List[GrammarIssue] = Field(default_factory=list)
+    name_match: Optional[NameMatch] = Field(default=None)
+    completeness: Optional[CompletenessResult] = Field(default=None)
+    consistency: Optional[ConsistencyResult] = Field(default=None)
 
     # Review tracking
     needs_review: bool = Field(default=False)
-    review_reasons: list[str] = Field(default_factory=list)
+    review_reasons: List[str] = Field(default_factory=list)
     review_status: ReviewStatus = Field(default=ReviewStatus.PENDING)
     reviewer_notes: str = Field(default="")
 
@@ -138,11 +141,11 @@ class TeacherDocument(BaseModel):
 
     # Processing metadata
     source_path: str = Field(description="Original file path or Google Drive ID")
-    processed_at: datetime | None = Field(default=None)
-    processing_duration_seconds: float | None = Field(default=None)
+    processed_at: Optional[datetime] = Field(default=None)
+    processing_duration_seconds: Optional[float] = Field(default=None)
 
     # Comments
-    comments: list[StudentComment] = Field(default_factory=list)
+    comments: List[StudentComment] = Field(default_factory=list)
 
     # Summary statistics
     @property
@@ -176,10 +179,10 @@ class ProcessingResult(BaseModel):
     # Batch metadata
     batch_id: str
     started_at: datetime
-    completed_at: datetime | None = None
+    completed_at: Optional[datetime] = None
 
     # Documents processed
-    documents: list[TeacherDocument] = Field(default_factory=list)
+    documents: List[TeacherDocument] = Field(default_factory=list)
 
     # Aggregate statistics
     @property
@@ -218,7 +221,7 @@ class RosterEntry(BaseModel):
     student_id: str
     first_name: str
     last_name: str
-    preferred_name: str | None = None
+    preferred_name: Optional[str] = None
 
     @property
     def full_name(self) -> str:
@@ -231,7 +234,7 @@ class RosterEntry(BaseModel):
         return self.full_name
 
     @property
-    def all_name_variants(self) -> list[str]:
+    def all_name_variants(self) -> List[str]:
         """All possible ways this student's name might appear."""
         variants = [
             self.full_name,
@@ -254,16 +257,16 @@ class ClassRoster(BaseModel):
     class_name: str
     teacher_name: str
     term: str
-    students: list[RosterEntry] = Field(default_factory=list)
+    students: List[RosterEntry] = Field(default_factory=list)
 
-    def get_all_names(self) -> list[str]:
+    def get_all_names(self) -> List[str]:
         """Get all possible student name variants for matching."""
         names = []
         for student in self.students:
             names.extend(student.all_name_variants)
         return names
 
-    def find_student(self, name: str) -> RosterEntry | None:
+    def find_student(self, name: str) -> Optional[RosterEntry]:
         """Find a student by any name variant."""
         name_lower = name.lower().strip()
         for student in self.students:
