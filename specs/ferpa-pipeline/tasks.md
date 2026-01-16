@@ -171,7 +171,7 @@ Focus: Get the pipeline running end-to-end by fixing structure, creating missing
 
 ### 1.5 Create CLI Module
 
-- [ ] 1.5.1 Create cli.py with basic commands
+- [x] 1.5.1 Create cli.py with basic commands
   - **Do**: Create CLI entrypoint matching pyproject.toml script definition
     1. Create `src/ferpa_feedback/cli.py`
     2. Implement `process` command for document processing
