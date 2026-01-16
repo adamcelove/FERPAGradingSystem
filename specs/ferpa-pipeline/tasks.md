@@ -371,7 +371,7 @@ After POC validated, clean up code and implement full functionality.
   - _Requirements: FR-12, AC-6.2, AC-6.3, AC-6.4, AC-6.5_
   - _Design: FastAPI Review UI_
 
-- [ ] 2.4.2 Add review CLI command
+- [x] 2.4.2 Add review CLI command
   - **Do**: Add `review` command to CLI for starting review server
     1. Update cli.py with `review` command
     2. Use uvicorn to run FastAPI app

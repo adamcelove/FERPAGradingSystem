@@ -151,5 +151,29 @@ def warmup() -> None:
     console.print("[bold green]LanguageTool ready.[/]")
 
 
+@app.command()
+def review(
+    port: int = typer.Option(8000, "--port", "-p", help="Port to run the review server on"),
+) -> None:
+    """
+    Start the review UI server.
+
+    Launches a FastAPI-based web interface for human review of processed
+    comments. Requires optional dependencies: pip install ferpa-feedback[review-ui]
+    """
+    try:
+        import uvicorn
+        from ferpa_feedback.stage_5_review import create_review_app, ReviewQueue
+
+        console.print(f"[bold blue]Starting review server on port {port}...[/]")
+        queue = ReviewQueue()
+        review_app = create_review_app(queue)
+        uvicorn.run(review_app, host="0.0.0.0", port=port)
+    except ImportError:
+        console.print("[red]Review UI requires optional dependencies.[/]")
+        console.print("[yellow]Install with: pip install ferpa-feedback[review-ui][/]")
+        raise typer.Exit(1)
+
+
 if __name__ == "__main__":
     app()
