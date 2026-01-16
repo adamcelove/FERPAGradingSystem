@@ -214,7 +214,7 @@ Focus: Get the pipeline running end-to-end by fixing structure, creating missing
 
 ### 1.7 Implement Stage 5 - Review Queue (Stub)
 
-- [ ] 1.7.1 Create stage_5_review.py with basic queue
+- [x] 1.7.1 Create stage_5_review.py with basic queue
   - **Do**: Create Stage 5 module with review queue logic
     1. Create `src/ferpa_feedback/stage_5_review.py`
     2. Implement `ReviewItem` model (or use from models.py if exists)
