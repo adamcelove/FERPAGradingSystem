@@ -23,6 +23,80 @@ from ferpa_feedback.models import TeacherDocument
 from ferpa_feedback.pipeline import create_pipeline
 
 
+def generate_anonymized_report(document: TeacherDocument, input_path: Path, output_dir: Path) -> Path:
+    """
+    Generate a document showing anonymized text for each comment.
+
+    Args:
+        document: The processed TeacherDocument with anonymized text
+        input_path: Path to the original input file
+        output_dir: Directory to save the output
+
+    Returns:
+        Path to the generated report file
+    """
+    # Create output directory if it doesn't exist
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create report filename
+    report_name = f"{input_path.stem}_anonymized.txt"
+    report_path = output_dir / report_name
+
+    lines = []
+    lines.append("=" * 70)
+    lines.append("ANONYMIZED COMMENTS")
+    lines.append("=" * 70)
+    lines.append(f"Original Document: {input_path.name}")
+    lines.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    lines.append(f"Total Comments: {len(document.comments)}")
+
+    # Count PII replacements
+    total_pii = sum(len(c.anonymization_mappings) for c in document.comments)
+    lines.append(f"Total PII Instances Replaced: {total_pii}")
+    lines.append("=" * 70)
+    lines.append("")
+    lines.append("NOTE: All personally identifiable information (PII) has been replaced")
+    lines.append("with placeholder tokens like [PERSON_1], [DATE_TIME_2], etc.")
+    lines.append("")
+
+    for comment in document.comments:
+        lines.append("-" * 70)
+        lines.append(f"STUDENT: {comment.student_name}")
+        lines.append(f"GRADE: {comment.grade}")
+        lines.append(f"PII Replaced: {len(comment.anonymization_mappings)}")
+        lines.append("-" * 70)
+        lines.append("")
+
+        if comment.anonymized_text:
+            lines.append("ANONYMIZED TEXT:")
+            lines.append(comment.anonymized_text)
+        else:
+            lines.append("ANONYMIZED TEXT: [No anonymization performed]")
+            lines.append("")
+            lines.append("ORIGINAL TEXT:")
+            lines.append(comment.comment_text)
+
+        lines.append("")
+
+        # Show what was replaced
+        if comment.anonymization_mappings:
+            lines.append("REPLACEMENTS MADE:")
+            for mapping in comment.anonymization_mappings:
+                lines.append(f"  - {mapping.entity_type}: \"{mapping.original}\" → \"{mapping.placeholder}\"")
+            lines.append("")
+
+        lines.append("")
+
+    lines.append("=" * 70)
+    lines.append("END OF ANONYMIZED DOCUMENT")
+    lines.append("=" * 70)
+
+    # Write report
+    report_path.write_text("\n".join(lines), encoding="utf-8")
+
+    return report_path
+
+
 def generate_grammar_report(document: TeacherDocument, input_path: Path) -> Path:
     """
     Generate a grammar report document showing all errors found.
@@ -217,8 +291,15 @@ def process(
 
     console.print("\n[bold green]Processing complete![/]")
 
-    # Generate grammar reports for each processed document
+    # Generate reports for each processed document
+    # Determine output directory (relative to input or current working directory)
+    if input_path.is_dir():
+        output_dir = input_path / "outputs"
+    else:
+        output_dir = input_path.parent / "outputs"
+
     for file_path, document in processed_docs:
+        # Grammar report (in same folder as input)
         total_issues = sum(len(c.grammar_issues) for c in document.comments)
         if total_issues > 0:
             report_path = generate_grammar_report(document, file_path)
@@ -228,6 +309,17 @@ def process(
             )
         else:
             console.print(f"[dim]No grammar issues found in {file_path.name}[/]")
+
+        # Anonymized output (in outputs folder)
+        total_pii = sum(len(c.anonymization_mappings) for c in document.comments)
+        if total_pii > 0:
+            anon_path = generate_anonymized_report(document, file_path, output_dir)
+            console.print(
+                f"[green]Anonymized output:[/] {anon_path} "
+                f"({total_pii} PII instances replaced)"
+            )
+        else:
+            console.print(f"[dim]No PII found to anonymize in {file_path.name}[/]")
 
 
 @app.command()
