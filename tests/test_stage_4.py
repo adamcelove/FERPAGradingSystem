@@ -14,7 +14,7 @@ Key test areas:
 
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -22,20 +22,19 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from ferpa_feedback.models import (
-    StudentComment,
     AnonymizationMapping,
+    StudentComment,
 )
 from ferpa_feedback.stage_3_anonymize import (
     AnonymizationGate,
     AnonymizationProcessor,
-    PIIDetector,
     Anonymizer,
+    PIIDetector,
 )
 from ferpa_feedback.stage_4_semantic import (
-    FERPAViolationError,
     FERPAEnforcedClient,
+    FERPAViolationError,
 )
-
 
 # ============================================================================
 # Fixtures
@@ -394,7 +393,6 @@ class TestSemanticAnalysis:
     ):
         """Test that CompletenessAnalyzer correctly scores comments with mocked API."""
         from ferpa_feedback.stage_4_semantic import CompletenessAnalyzer
-        from ferpa_feedback.models import ConfidenceLevel
 
         # Configure mock response for completeness analysis
         completeness_response = (
@@ -491,8 +489,8 @@ class TestSemanticAnalysis:
         comment_clean_anonymized,
     ):
         """Test that ConsistencyAnalyzer detects consistent grade-comment pairs."""
-        from ferpa_feedback.stage_4_semantic import ConsistencyAnalyzer
         from ferpa_feedback.models import ConfidenceLevel
+        from ferpa_feedback.stage_4_semantic import ConsistencyAnalyzer
 
         # Configure mock response for consistent analysis
         # Comment has grade "C" and should have constructive sentiment
@@ -532,8 +530,8 @@ class TestSemanticAnalysis:
         comment_clean_anonymized,
     ):
         """Test that ConsistencyAnalyzer detects misaligned grade-comment pairs."""
-        from ferpa_feedback.stage_4_semantic import ConsistencyAnalyzer
         from ferpa_feedback.models import ConfidenceLevel
+        from ferpa_feedback.stage_4_semantic import ConsistencyAnalyzer
 
         # Configure mock response for inconsistent analysis
         # A failing grade with overly positive comments
@@ -576,8 +574,8 @@ class TestSemanticAnalysis:
         comment_clean_anonymized,
     ):
         """Test that ConsistencyAnalyzer handles ambiguous sentiment with MEDIUM confidence."""
-        from ferpa_feedback.stage_4_semantic import ConsistencyAnalyzer
         from ferpa_feedback.models import ConfidenceLevel
+        from ferpa_feedback.stage_4_semantic import ConsistencyAnalyzer
 
         # Configure mock response with mixed/ambiguous sentiment
         ambiguous_response = (
@@ -609,11 +607,11 @@ class TestSemanticAnalysis:
         comment_clean_anonymized,
     ):
         """Test that analyzers return stub results when no client is provided."""
+        from ferpa_feedback.models import ConfidenceLevel
         from ferpa_feedback.stage_4_semantic import (
             CompletenessAnalyzer,
             ConsistencyAnalyzer,
         )
-        from ferpa_feedback.models import ConfidenceLevel
 
         # Create analyzers without client
         completeness_analyzer = CompletenessAnalyzer(client=None)
@@ -640,8 +638,8 @@ class TestSemanticAnalysis:
         comment_clean_anonymized,
     ):
         """Test that analyzers handle malformed JSON responses gracefully."""
-        from ferpa_feedback.stage_4_semantic import CompletenessAnalyzer
         from ferpa_feedback.models import ConfidenceLevel
+        from ferpa_feedback.stage_4_semantic import CompletenessAnalyzer
 
         # Configure mock to return malformed JSON
         mock_anthropic_client.messages.create = MagicMock(

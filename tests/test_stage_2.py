@@ -7,36 +7,34 @@ Tests cover:
 - Edge cases: apostrophes, hyphens, prefixes, nicknames
 """
 
-import pytest
 import sys
 from pathlib import Path
-from typing import List, Tuple
+
+import pytest
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
+from ferpa_feedback.models import (
+    ClassRoster,
+    ConfidenceLevel,
+    RosterEntry,
+    StudentComment,
+)
 from ferpa_feedback.stage_2_names import (
-    StubExtractor,
-    GLiNERExtractor,
-    SpaCyExtractor,
-    NameMatcher,
-    NameVerificationProcessor,
-    create_name_processor,
-    normalize_name,
-    strip_suffix,
-    expand_nicknames,
-    get_all_name_variants,
     GLINER_AVAILABLE,
     SPACY_AVAILABLE,
-    RAPIDFUZZ_AVAILABLE,
+    GLiNERExtractor,
+    NameMatcher,
+    NameVerificationProcessor,
+    SpaCyExtractor,
+    StubExtractor,
+    create_name_processor,
+    expand_nicknames,
+    get_all_name_variants,
+    normalize_name,
+    strip_suffix,
 )
-from ferpa_feedback.models import (
-    StudentComment,
-    ClassRoster,
-    RosterEntry,
-    ConfidenceLevel,
-)
-
 
 # ============================================================================
 # Test Fixtures

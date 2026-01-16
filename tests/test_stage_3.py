@@ -11,22 +11,21 @@ Tests cover:
 
 import json
 import re
-import pytest
 import sys
 from pathlib import Path
-from typing import Optional
+
+import pytest
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from ferpa_feedback.recognizers.educational import (
-    StudentIDRecognizer,
+    PRESIDIO_AVAILABLE,
     GradeLevelRecognizer,
     SchoolNameRecognizer,
-    PRESIDIO_AVAILABLE,
+    StudentIDRecognizer,
 )
 from ferpa_feedback.stage_3_anonymize import PIIDetector
-
 
 # ============================================================================
 # Test StudentIDRecognizer
@@ -524,7 +523,7 @@ class TestPIIRecall:
     def pii_test_corpus(self):
         """Load test corpus with known PII."""
         corpus_path = Path(__file__).parent / "fixtures" / "pii_test_corpus.json"
-        with open(corpus_path, "r") as f:
+        with open(corpus_path) as f:
             return json.load(f)
 
     @pytest.fixture
@@ -557,7 +556,6 @@ class TestPIIRecall:
 
         for expected in expected_pii:
             expected_value = expected["value"]
-            expected_type = expected["type"]
 
             # Check if any detection matches the expected PII
             found = False
@@ -632,17 +630,14 @@ class TestPIIRecall:
                     "missed_count": expected - detected,
                 })
 
-        # Calculate recall
-        if total_expected == 0:
-            recall = 1.0  # No PII expected, perfect recall
-        else:
-            recall = total_detected / total_expected
+        # Calculate recall (1.0 if no PII expected, else ratio of detected to expected)
+        recall = 1.0 if total_expected == 0 else total_detected / total_expected
 
         # Report false positive rate (informational, not a test failure)
         fp_rate = len(all_false_positives) / len(pii_test_corpus["test_cases"])
 
         # Log metrics for debugging
-        print(f"\n=== PII Recall Test Results ===")
+        print("\n=== PII Recall Test Results ===")
         print(f"Total expected PII: {total_expected}")
         print(f"Total detected PII: {total_detected}")
         print(f"Recall: {recall:.2%}")
@@ -689,7 +684,7 @@ class TestPIIRecall:
                         break
 
         # Report per-type recall
-        print(f"\n=== Recall by PII Type ===")
+        print("\n=== Recall by PII Type ===")
         for pii_type, stats in sorted(type_stats.items()):
             if stats["expected"] > 0:
                 type_recall = stats["detected"] / stats["expected"]
@@ -726,7 +721,7 @@ class TestPIIRecall:
                     ],
                 })
 
-        print(f"\n=== False Positive Documentation ===")
+        print("\n=== False Positive Documentation ===")
         print(f"Total false positives: {total_fps}")
         print(f"Tests with FPs: {len(fp_details)}/{len(pii_test_corpus['test_cases'])}")
 
@@ -751,7 +746,7 @@ class TestPIIRecall:
             detections = pii_detector.detect(text)
             total_fps += len(detections)
 
-        print(f"\n=== No-PII Cases ===")
+        print("\n=== No-PII Cases ===")
         print(f"Cases without expected PII: {len(no_pii_cases)}")
         print(f"False positives in no-PII cases: {total_fps}")
 
@@ -780,7 +775,7 @@ class TestPIIRecall:
 
         if total > 0:
             recall = detected / total
-            print(f"\n=== Email Detection Recall ===")
+            print("\n=== Email Detection Recall ===")
             print(f"Recall: {recall:.0%} ({detected}/{total})")
             assert recall >= self.RECALL_TARGET, f"Email recall {recall:.2%} below target"
 
@@ -809,7 +804,7 @@ class TestPIIRecall:
 
         if total > 0:
             recall = detected / total
-            print(f"\n=== Phone Detection Recall ===")
+            print("\n=== Phone Detection Recall ===")
             print(f"Recall: {recall:.0%} ({detected}/{total})")
             assert recall >= self.RECALL_TARGET, f"Phone recall {recall:.2%} below target"
 
@@ -835,7 +830,7 @@ class TestPIIRecall:
 
         if total > 0:
             recall = detected / total
-            print(f"\n=== SSN Detection Recall ===")
+            print("\n=== SSN Detection Recall ===")
             print(f"Recall: {recall:.0%} ({detected}/{total})")
             assert recall >= self.RECALL_TARGET, f"SSN recall {recall:.2%} below target"
 
@@ -868,7 +863,7 @@ class TestPIIRecall:
 
         if total > 0:
             recall = detected / total
-            print(f"\n=== Student ID Detection Recall ===")
+            print("\n=== Student ID Detection Recall ===")
             print(f"Recall: {recall:.0%} ({detected}/{total})")
             assert recall >= self.RECALL_TARGET, f"Student ID recall {recall:.2%} below target"
 

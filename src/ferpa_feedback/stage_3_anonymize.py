@@ -126,7 +126,7 @@ class PIIDetector:
         "mark", "nick", "jack", "dick", "frank", "grace", "hope", "faith",
         "gene", "jean", "sue", "dawn", "don", "drew", "dean", "grant",
         "wade", "chase", "chance", "clay", "cliff", "dale", "glen", "lane",
-        "miles", "pierce", "reed", "sterling", "troy", "wade", "ward",
+        "miles", "pierce", "reed", "sterling", "troy", "ward",
     }
 
     def __init__(
@@ -280,10 +280,7 @@ class PIIDetector:
 
         # If the word is all lowercase, it's likely a common word usage
         # Names are typically capitalized (e.g., "Will" vs "will")
-        if matched.islower():
-            return True
-
-        return False
+        return matched.islower()
 
     def detect(self, text: str) -> list[dict[str, Any]]:
         """
@@ -298,16 +295,16 @@ class PIIDetector:
         detections = []
 
         # 1. Roster-based detection (highest priority)
-        for pattern, canonical_name, is_explicit in self._roster_patterns:
+        for pattern, canonical_name, _is_explicit in self._roster_patterns:
             for match in pattern.finditer(text):
                 matched_text = match.group()
 
                 # Skip common English words when they appear in lowercase
                 # e.g., "will" (modal verb) vs "Will" (name)
                 # This applies to both explicit and expanded patterns for short words
-                if matched_text.lower() in self.COMMON_WORD_EXCLUSIONS:
-                    if self._is_common_word_in_context(text, match.start(), match.end()):
-                        continue
+                if (matched_text.lower() in self.COMMON_WORD_EXCLUSIONS
+                        and self._is_common_word_in_context(text, match.start(), match.end())):
+                    continue
 
                 detections.append({
                     "text": matched_text,

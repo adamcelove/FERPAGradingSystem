@@ -13,7 +13,7 @@ that FERPA compliance is maintained throughout the pipeline.
 
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -21,37 +21,32 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from ferpa_feedback.models import (
-    StudentComment,
-    TeacherDocument,
+    AnonymizationMapping,
     ClassRoster,
     RosterEntry,
-    AnonymizationMapping,
-    ConfidenceLevel,
+    StudentComment,
+    TeacherDocument,
 )
 from ferpa_feedback.pipeline import (
     FeedbackPipeline,
     PipelineConfig,
     create_pipeline,
 )
-from ferpa_feedback.stage_0_ingestion import DocumentParser
-from ferpa_feedback.stage_1_grammar import GrammarChecker, create_grammar_checker
-from ferpa_feedback.stage_2_names import create_name_processor
 from ferpa_feedback.stage_3_anonymize import (
     AnonymizationGate,
     AnonymizationProcessor,
-    PIIDetector,
     Anonymizer,
+    PIIDetector,
     create_anonymization_processor,
 )
 from ferpa_feedback.stage_4_semantic import (
-    FERPAViolationError,
-    FERPAEnforcedClient,
-    SemanticAnalysisProcessor,
     CompletenessAnalyzer,
     ConsistencyAnalyzer,
+    FERPAEnforcedClient,
+    FERPAViolationError,
+    SemanticAnalysisProcessor,
     create_semantic_processor,
 )
-
 
 # ============================================================================
 # Fixtures
@@ -391,7 +386,7 @@ class TestPipelineIntegration:
 
         # Test 4: Create new gate with fresh processor for clean verification
         fresh_gate = AnonymizationGate(processor)
-        fresh_client = FERPAEnforcedClient(
+        FERPAEnforcedClient(
             api_key="test-key",
             gate=fresh_gate,
             enable_zdr=True,
@@ -525,7 +520,7 @@ class TestSemanticAnalysisIntegration:
 
         # Process a clean anonymized comment
         comment = anonymized_document.comments[0]
-        processed = processor.process_comment(comment)
+        processor.process_comment(comment)
 
         # Verify analysis was performed (API was called)
         assert mock_client.messages.create.called

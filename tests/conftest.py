@@ -19,19 +19,18 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from ferpa_feedback.models import (
-    StudentComment,
-    TeacherDocument,
-    RosterEntry,
+    AnonymizationMapping,
     ClassRoster,
+    CompletenessResult,
     ConfidenceLevel,
-    ReviewStatus,
+    ConsistencyResult,
     GrammarIssue,
     NameMatch,
-    AnonymizationMapping,
-    CompletenessResult,
-    ConsistencyResult,
+    ReviewStatus,
+    RosterEntry,
+    StudentComment,
+    TeacherDocument,
 )
-
 
 # ============================================================================
 # Path Fixtures
@@ -363,7 +362,7 @@ def mock_roster_names(mock_roster: ClassRoster) -> List[str]:
 def load_sample_comments(sample_comments_path: Path) -> List[dict]:
     """Load sample comments from JSON fixture file."""
     if sample_comments_path.exists():
-        with open(sample_comments_path, "r") as f:
+        with open(sample_comments_path) as f:
             return json.load(f)
     return []
 

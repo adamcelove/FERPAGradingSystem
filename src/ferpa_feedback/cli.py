@@ -293,10 +293,7 @@ def process(
 
     # Generate reports for each processed document
     # Determine output directory (relative to input or current working directory)
-    if input_path.is_dir():
-        output_dir = input_path / "outputs"
-    else:
-        output_dir = input_path.parent / "outputs"
+    output_dir = input_path / "outputs" if input_path.is_dir() else input_path.parent / "outputs"
 
     for file_path, document in processed_docs:
         # Grammar report (in same folder as input)
