@@ -12,7 +12,7 @@ This module provides:
 """
 
 import re
-from typing import Any, Optional, Protocol, List, Tuple, Dict, Union
+from typing import Any, Protocol
 
 from ferpa_feedback.models import (
     ClassRoster,
@@ -46,7 +46,7 @@ except ImportError:
 
 # Nickname expansion table for common name variations
 # Maps nickname -> formal name(s)
-NICKNAME_MAP: Dict[str, List[str]] = {
+NICKNAME_MAP: dict[str, list[str]] = {
     # William variants
     "bill": ["william"],
     "billy": ["william"],
@@ -159,7 +159,7 @@ NICKNAME_MAP: Dict[str, List[str]] = {
 }
 
 # Reverse mapping: formal name -> nicknames
-FORMAL_TO_NICKNAMES: Dict[str, List[str]] = {}
+FORMAL_TO_NICKNAMES: dict[str, list[str]] = {}
 for nickname, formal_names in NICKNAME_MAP.items():
     for formal_name in formal_names:
         if formal_name not in FORMAL_TO_NICKNAMES:
@@ -248,7 +248,7 @@ def strip_suffix(name: str) -> str:
     return name
 
 
-def expand_nicknames(name: str) -> List[str]:
+def expand_nicknames(name: str) -> list[str]:
     """
     Expand a name to include nickname variants.
 
@@ -293,7 +293,7 @@ def expand_nicknames(name: str) -> List[str]:
     return variants
 
 
-def get_all_name_variants(name: str, include_nicknames: bool = True) -> List[str]:
+def get_all_name_variants(name: str, include_nicknames: bool = True) -> list[str]:
     """
     Get all variants of a name for matching.
 
@@ -340,7 +340,7 @@ def get_all_name_variants(name: str, include_nicknames: bool = True) -> List[str
 class NameExtractor(Protocol):
     """Protocol for name extraction backends."""
 
-    def extract_names(self, text: str) -> List[Tuple[str, float]]:
+    def extract_names(self, text: str) -> list[tuple[str, float]]:
         """
         Extract names from text with confidence scores.
 
@@ -360,10 +360,10 @@ class StubExtractor:
     Used as a placeholder until GLiNER/spaCy extractors are implemented.
     """
 
-    def __init__(self, roster: Optional[ClassRoster] = None) -> None:
-        self._roster: Optional[ClassRoster] = roster
+    def __init__(self, roster: ClassRoster | None = None) -> None:
+        self._roster: ClassRoster | None = roster
 
-    def extract_names(self, text: str) -> List[Tuple[str, float]]:
+    def extract_names(self, text: str) -> list[tuple[str, float]]:
         """Return empty list - stub implementation."""
         return []
 
@@ -384,7 +384,7 @@ class GLiNERExtractor:
         self,
         model_name: str = "urchade/gliner_base",
         threshold: float = 0.5,
-        roster: Optional[ClassRoster] = None,
+        roster: ClassRoster | None = None,
     ) -> None:
         """
         Initialize GLiNER extractor.
@@ -396,8 +396,8 @@ class GLiNERExtractor:
         """
         self._model_name = model_name
         self._threshold = threshold
-        self._roster: Optional[ClassRoster] = roster
-        self._model: Optional["GLiNER"] = None
+        self._roster: ClassRoster | None = roster
+        self._model: GLiNER | None = None
         self._model_load_failed = False
 
     def _load_model(self) -> bool:
@@ -425,7 +425,7 @@ class GLiNERExtractor:
             self._model_load_failed = True
             return False
 
-    def extract_names(self, text: str) -> List[Tuple[str, float]]:
+    def extract_names(self, text: str) -> list[tuple[str, float]]:
         """
         Extract PERSON entities from text using GLiNER.
 
@@ -449,7 +449,7 @@ class GLiNERExtractor:
             entities = self._model.predict_entities(text, labels, threshold=self._threshold)
 
             # Extract name and score from each entity
-            results: List[Tuple[str, float]] = []
+            results: list[tuple[str, float]] = []
             for entity in entities:
                 name = entity.get("text", "")
                 score = entity.get("score", 0.0)
@@ -477,7 +477,7 @@ class SpaCyExtractor:
     def __init__(
         self,
         model_name: str = "en_core_web_trf",
-        roster: Optional[ClassRoster] = None,
+        roster: ClassRoster | None = None,
     ) -> None:
         """
         Initialize spaCy extractor.
@@ -487,8 +487,8 @@ class SpaCyExtractor:
             roster: Optional class roster for context-aware extraction
         """
         self._model_name = model_name
-        self._roster: Optional[ClassRoster] = roster
-        self._nlp: Optional["spacy.language.Language"] = None
+        self._roster: ClassRoster | None = roster
+        self._nlp: spacy.language.Language | None = None
         self._model_load_failed = False
 
     def _load_model(self) -> bool:
@@ -524,7 +524,7 @@ class SpaCyExtractor:
             self._model_load_failed = True
             return False
 
-    def extract_names(self, text: str) -> List[Tuple[str, float]]:
+    def extract_names(self, text: str) -> list[tuple[str, float]]:
         """
         Extract PERSON entities from text using spaCy NER.
 
@@ -544,7 +544,7 @@ class SpaCyExtractor:
 
         try:
             doc = self._nlp(text)
-            results: List[Tuple[str, float]] = []
+            results: list[tuple[str, float]] = []
 
             for ent in doc.ents:
                 if ent.label_ == "PERSON":
@@ -584,7 +584,7 @@ class NameMatcher:
         self,
         extracted_name: str,
         expected_name: str,
-        all_variants: List[str],
+        all_variants: list[str],
     ) -> NameMatch:
         """
         Match an extracted name against expected student.
@@ -685,7 +685,7 @@ class NameVerificationProcessor:
         self,
         extractor: NameExtractor,
         matcher: NameMatcher,
-        roster: Optional[ClassRoster] = None,
+        roster: ClassRoster | None = None,
     ) -> None:
         """
         Initialize the name verification processor.
@@ -697,7 +697,7 @@ class NameVerificationProcessor:
         """
         self.extractor = extractor
         self.matcher = matcher
-        self.roster: Optional[ClassRoster] = roster
+        self.roster: ClassRoster | None = roster
 
         if roster is not None:
             self.extractor.set_roster(roster)
@@ -723,7 +723,7 @@ class NameVerificationProcessor:
 
         # Get name variants for matching
         # If we have a roster, try to find the student's variants
-        all_variants: List[str] = [comment.student_name]
+        all_variants: list[str] = [comment.student_name]
 
         if self.roster is not None:
             student = self.roster.find_student(comment.student_name)
@@ -769,8 +769,8 @@ class NameVerificationProcessor:
 
 
 def create_name_processor(
-    roster: Optional[ClassRoster] = None,
-    config: Optional[Dict[str, Any]] = None,
+    roster: ClassRoster | None = None,
+    config: dict[str, Any] | None = None,
 ) -> NameVerificationProcessor:
     """
     Factory function for creating a NameVerificationProcessor.

@@ -12,7 +12,6 @@ Usage:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -36,21 +35,21 @@ def process(
         help="Path to .docx file or directory containing documents",
         exists=True,
     ),
-    roster: Optional[Path] = typer.Option(
+    roster: Path | None = typer.Option(
         None,
         "--roster",
         "-r",
         help="Path to roster CSV file for name matching",
         exists=True,
     ),
-    config: Optional[Path] = typer.Option(
+    config: Path | None = typer.Option(
         None,
         "--config",
         "-c",
         help="Path to settings.yaml configuration file",
         exists=True,
     ),
-    output: Optional[Path] = typer.Option(
+    output: Path | None = typer.Option(
         None,
         "--output",
         "-o",
@@ -160,7 +159,7 @@ def warmup() -> None:
 
         except Exception as e:
             console.print(f"[red]Failed to warm up LanguageTool: {e}[/]")
-            raise typer.Exit(code=1)
+            raise typer.Exit(code=1) from e
 
     console.print("[bold green]LanguageTool ready.[/]")
 
@@ -177,16 +176,17 @@ def review(
     """
     try:
         import uvicorn
-        from ferpa_feedback.stage_5_review import create_review_app, ReviewQueue
+
+        from ferpa_feedback.stage_5_review import ReviewQueue, create_review_app
 
         console.print(f"[bold blue]Starting review server on port {port}...[/]")
         queue = ReviewQueue()
         review_app = create_review_app(queue)
         uvicorn.run(review_app, host="0.0.0.0", port=port)
-    except ImportError:
+    except ImportError as e:
         console.print("[red]Review UI requires optional dependencies.[/]")
         console.print("[yellow]Install with: pip install ferpa-feedback[review-ui][/]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 if __name__ == "__main__":

@@ -18,7 +18,8 @@ This stage is 100% local - no external API calls.
 """
 
 import re
-from typing import Any, List, Optional, Pattern
+from re import Pattern
+from typing import Any
 
 import structlog
 
@@ -33,10 +34,10 @@ logger = structlog.get_logger()
 
 
 def create_enhanced_analyzer(
-    roster: Optional[ClassRoster] = None,
-    school_patterns: Optional[List[str]] = None,
+    roster: ClassRoster | None = None,
+    school_patterns: list[str] | None = None,
     score_threshold: float = 0.3,  # Low threshold for high recall
-) -> Optional[Any]:
+) -> Any | None:
     """
     Create an enhanced Presidio analyzer with custom educational recognizers.
 
@@ -61,10 +62,10 @@ def create_enhanced_analyzer(
         return None
 
     from ferpa_feedback.recognizers.educational import (
-        StudentIDRecognizer,
+        PRESIDIO_AVAILABLE,
         GradeLevelRecognizer,
         SchoolNameRecognizer,
-        PRESIDIO_AVAILABLE,
+        StudentIDRecognizer,
     )
 
     # Only register recognizers if presidio is truly available
@@ -118,10 +119,10 @@ class PIIDetector:
 
     def __init__(
         self,
-        roster: Optional[ClassRoster] = None,
+        roster: ClassRoster | None = None,
         use_presidio: bool = True,
         use_custom_recognizers: bool = True,
-        school_patterns: Optional[List[str]] = None,
+        school_patterns: list[str] | None = None,
         score_threshold: float = 0.3,  # Low threshold for high recall
     ):
         """
@@ -140,7 +141,7 @@ class PIIDetector:
         self.school_patterns = school_patterns
         self.score_threshold = score_threshold
         self._presidio_analyzer = None
-        self._roster_patterns: List[tuple[Pattern[str], str]] = []
+        self._roster_patterns: list[tuple[Pattern[str], str]] = []
 
         if roster:
             self._build_roster_patterns()
@@ -153,7 +154,7 @@ class PIIDetector:
         )
 
     @property
-    def presidio_analyzer(self) -> Optional[Any]:
+    def presidio_analyzer(self) -> Any | None:
         """Lazy-load Presidio analyzer with optional custom recognizers."""
         if self._presidio_analyzer is None and self.use_presidio:
             if self.use_custom_recognizers:
@@ -204,7 +205,7 @@ class PIIDetector:
         self.roster = roster
         self._build_roster_patterns()
 
-    def detect(self, text: str) -> List[dict[str, Any]]:
+    def detect(self, text: str) -> list[dict[str, Any]]:
         """
         Detect all PII in text.
 
@@ -337,7 +338,7 @@ class Anonymizer:
     def anonymize(
         self,
         text: str,
-        detections: List[dict[str, Any]],
+        detections: list[dict[str, Any]],
     ) -> tuple[str, list[AnonymizationMapping]]:
         """
         Anonymize text by replacing detected PII.
@@ -604,7 +605,7 @@ class AnonymizationGate:
 
         return True
 
-    def get_safe_text(self, comment: StudentComment) -> Optional[str]:
+    def get_safe_text(self, comment: StudentComment) -> str | None:
         """
         Get text that is safe to send to external API.
 
@@ -621,8 +622,8 @@ class AnonymizationGate:
 
 # Factory function
 def create_anonymization_processor(
-    roster: Optional[ClassRoster] = None,
-    config: Optional[dict[str, Any]] = None,
+    roster: ClassRoster | None = None,
+    config: dict[str, Any] | None = None,
 ) -> AnonymizationProcessor:
     """
     Create configured anonymization processor.

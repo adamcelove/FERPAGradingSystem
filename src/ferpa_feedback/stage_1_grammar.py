@@ -9,7 +9,7 @@ processing happens on your infrastructure.
 """
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import language_tool_python
 import structlog
@@ -30,8 +30,8 @@ class GrammarChecker:
     def __init__(
         self,
         language: str = "en-US",
-        disabled_rules: Optional[List[str]] = None,
-        custom_dictionary: Optional[List[str]] = None,
+        disabled_rules: list[str] | None = None,
+        custom_dictionary: list[str] | None = None,
     ):
         """
         Initialize the grammar checker.
@@ -46,7 +46,7 @@ class GrammarChecker:
         self.custom_dictionary = set(custom_dictionary or [])
 
         logger.info("initializing_language_tool", language=language)
-        self._tool: Optional[language_tool_python.LanguageTool] = None
+        self._tool: language_tool_python.LanguageTool | None = None
 
     @property
     def tool(self) -> language_tool_python.LanguageTool:
@@ -56,13 +56,13 @@ class GrammarChecker:
 
             # Disable specified rules
             if self.disabled_rules:
-                for rule_id in self.disabled_rules:
+                for _rule_id in self.disabled_rules:
                     self._tool.disable_spellchecking()  # Example; actual API may vary
                 logger.info("disabled_rules", rules=self.disabled_rules)
 
         return self._tool
 
-    def add_to_dictionary(self, words: List[str]) -> None:
+    def add_to_dictionary(self, words: list[str]) -> None:
         """Add words to the custom dictionary (will not be flagged as misspellings)."""
         self.custom_dictionary.update(w.lower() for w in words)
         logger.debug("dictionary_updated", added_count=len(words))
@@ -73,13 +73,13 @@ class GrammarChecker:
             logger.warning("dictionary_file_not_found", path=str(file_path))
             return
 
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, encoding='utf-8') as f:
             words = [line.strip() for line in f if line.strip()]
 
         self.add_to_dictionary(words)
         logger.info("dictionary_loaded", path=str(file_path), count=len(words))
 
-    def check_text(self, text: str) -> List[GrammarIssue]:
+    def check_text(self, text: str) -> list[GrammarIssue]:
         """
         Check a text for grammar, spelling, and punctuation issues.
 
@@ -221,15 +221,15 @@ class GrammarReportGenerator:
     """Generates reports of grammar issues for review."""
 
     @staticmethod
-    def generate_summary(document: TeacherDocument) -> Dict[str, Any]:
+    def generate_summary(document: TeacherDocument) -> dict[str, Any]:
         """
         Generate a summary of grammar issues in a document.
 
         Returns:
             Dictionary with issue counts and details
         """
-        issues_by_rule: Dict[str, Dict[str, Any]] = {}
-        issues_by_comment: Dict[str, int] = {}
+        issues_by_rule: dict[str, dict[str, Any]] = {}
+        issues_by_comment: dict[str, int] = {}
 
         for comment in document.comments:
             if comment.grammar_issues:
@@ -264,7 +264,7 @@ class GrammarReportGenerator:
 
 
 # Factory function for easy initialization with config
-def create_grammar_checker(config: Dict[str, Any]) -> GrammarChecker:
+def create_grammar_checker(config: dict[str, Any]) -> GrammarChecker:
     """
     Create a GrammarChecker from configuration dictionary.
 

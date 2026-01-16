@@ -7,9 +7,8 @@ across the pipeline stages.
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ConfidenceLevel(str, Enum):
@@ -112,14 +111,14 @@ class StudentComment(BaseModel):
     comment_text: str = Field(description="Original comment text")
 
     # Anonymized version (safe for external API)
-    anonymized_text: Optional[str] = Field(default=None, description="PII-redacted comment")
+    anonymized_text: str | None = Field(default=None, description="PII-redacted comment")
     anonymization_mappings: list[AnonymizationMapping] = Field(default_factory=list)
 
     # Analysis results
     grammar_issues: list[GrammarIssue] = Field(default_factory=list)
-    name_match: Optional[NameMatch] = Field(default=None)
-    completeness: Optional[CompletenessResult] = Field(default=None)
-    consistency: Optional[ConsistencyResult] = Field(default=None)
+    name_match: NameMatch | None = Field(default=None)
+    completeness: CompletenessResult | None = Field(default=None)
+    consistency: ConsistencyResult | None = Field(default=None)
 
     # Review tracking
     needs_review: bool = Field(default=False)
@@ -139,8 +138,8 @@ class TeacherDocument(BaseModel):
 
     # Processing metadata
     source_path: str = Field(description="Original file path or Google Drive ID")
-    processed_at: Optional[datetime] = Field(default=None)
-    processing_duration_seconds: Optional[float] = Field(default=None)
+    processed_at: datetime | None = Field(default=None)
+    processing_duration_seconds: float | None = Field(default=None)
 
     # Comments
     comments: list[StudentComment] = Field(default_factory=list)
@@ -177,7 +176,7 @@ class ProcessingResult(BaseModel):
     # Batch metadata
     batch_id: str
     started_at: datetime
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
 
     # Documents processed
     documents: list[TeacherDocument] = Field(default_factory=list)
@@ -219,7 +218,7 @@ class RosterEntry(BaseModel):
     student_id: str
     first_name: str
     last_name: str
-    preferred_name: Optional[str] = None
+    preferred_name: str | None = None
 
     @property
     def full_name(self) -> str:
@@ -264,7 +263,7 @@ class ClassRoster(BaseModel):
             names.extend(student.all_name_variants)
         return names
 
-    def find_student(self, name: str) -> Optional[RosterEntry]:
+    def find_student(self, name: str) -> RosterEntry | None:
         """Find a student by any name variant."""
         name_lower = name.lower().strip()
         for student in self.students:

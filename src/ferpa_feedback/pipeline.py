@@ -21,7 +21,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, cast
+from typing import Any, cast
 
 import structlog
 import yaml  # type: ignore[import-untyped]
@@ -38,7 +38,6 @@ from ferpa_feedback.stage_1_grammar import GrammarChecker, create_grammar_checke
 from ferpa_feedback.stage_2_names import NameVerificationProcessor, create_name_processor
 from ferpa_feedback.stage_3_anonymize import (
     AnonymizationGate,
-    AnonymizationProcessor,
     create_anonymization_processor,
 )
 
@@ -48,24 +47,24 @@ logger = structlog.get_logger()
 class PipelineConfig:
     """Configuration container for the pipeline."""
 
-    def __init__(self, config_path: Optional[Path] = None):
+    def __init__(self, config_path: Path | None = None):
         """
         Load configuration from YAML file.
 
         Args:
             config_path: Path to settings.yaml
         """
-        self.config: Dict[str, Any] = {}
+        self.config: dict[str, Any] = {}
 
         if config_path and config_path.exists():
-            with open(config_path, 'r') as f:
+            with open(config_path) as f:
                 self.config = yaml.safe_load(f) or {}
             logger.info("config_loaded", path=str(config_path))
         else:
             logger.warning("using_default_config")
 
     @property
-    def stages_enabled(self) -> Dict[str, bool]:
+    def stages_enabled(self) -> dict[str, bool]:
         """Get enabled stages."""
         pipeline_config = self.config.get("pipeline", {})
         if isinstance(pipeline_config, dict):
@@ -75,7 +74,7 @@ class PipelineConfig:
                 "completeness": True,
                 "grade_consistency": True,
             })
-            return cast(Dict[str, bool], stages)
+            return cast(dict[str, bool], stages)
         return {
             "grammar": True,
             "name_matching": True,
@@ -84,31 +83,31 @@ class PipelineConfig:
         }
 
     @property
-    def grammar_config(self) -> Dict[str, Any]:
+    def grammar_config(self) -> dict[str, Any]:
         """Get grammar checker configuration."""
         result = self.config.get("grammar", {})
-        return cast(Dict[str, Any], result)
+        return cast(dict[str, Any], result)
 
     @property
-    def name_detection_config(self) -> Dict[str, Any]:
+    def name_detection_config(self) -> dict[str, Any]:
         """Get name detection configuration."""
         result = self.config.get("name_detection", {})
-        return cast(Dict[str, Any], result)
+        return cast(dict[str, Any], result)
 
     @property
-    def anonymization_config(self) -> Dict[str, Any]:
+    def anonymization_config(self) -> dict[str, Any]:
         """Get anonymization configuration."""
         result = self.config.get("anonymization", {})
-        return cast(Dict[str, Any], result)
+        return cast(dict[str, Any], result)
 
     @property
-    def ferpa_config(self) -> Dict[str, Any]:
+    def ferpa_config(self) -> dict[str, Any]:
         """Get FERPA compliance configuration."""
         result = self.config.get("ferpa", {
             "anonymize_before_api": True,
             "log_all_api_calls": True,
         })
-        return cast(Dict[str, Any], result)
+        return cast(dict[str, Any], result)
 
 
 class FeedbackPipeline:
@@ -123,8 +122,8 @@ class FeedbackPipeline:
 
     def __init__(
         self,
-        config: Optional[PipelineConfig] = None,
-        roster: Optional[ClassRoster] = None,
+        config: PipelineConfig | None = None,
+        roster: ClassRoster | None = None,
     ):
         """
         Initialize the pipeline.
@@ -153,12 +152,12 @@ class FeedbackPipeline:
         self.document_parser = DocumentParser()
 
         # Stage 1: Grammar checking
-        self.grammar_checker: Optional[GrammarChecker] = None
+        self.grammar_checker: GrammarChecker | None = None
         if self.config.stages_enabled.get("grammar", True):
             self.grammar_checker = create_grammar_checker(self.config.grammar_config)
 
         # Stage 2: Name verification
-        self.name_processor: Optional[NameVerificationProcessor] = None
+        self.name_processor: NameVerificationProcessor | None = None
         if self.config.stages_enabled.get("name_matching", True):
             self.name_processor = create_name_processor(
                 roster=self.roster,
@@ -235,7 +234,7 @@ class FeedbackPipeline:
     def process_document(
         self,
         file_path: Path,
-        document_id: Optional[str] = None,
+        document_id: str | None = None,
     ) -> TeacherDocument:
         """
         Process a single document through all local stages.
@@ -308,7 +307,7 @@ class FeedbackPipeline:
     def get_api_ready_comments(
         self,
         document: TeacherDocument,
-    ) -> List[Tuple[StudentComment, str]]:
+    ) -> list[tuple[StudentComment, str]]:
         """
         Get comments that are safe to send to external API.
 
@@ -320,7 +319,7 @@ class FeedbackPipeline:
         Returns:
             List of (comment, anonymized_text) tuples that passed the gate
         """
-        api_ready: List[Tuple[StudentComment, str]] = []
+        api_ready: list[tuple[StudentComment, str]] = []
         blocked = 0
 
         for comment in document.comments:
@@ -344,8 +343,8 @@ class FeedbackPipeline:
 
     def process_batch(
         self,
-        file_paths: List[Path],
-        roster_path: Optional[Path] = None,
+        file_paths: list[Path],
+        roster_path: Path | None = None,
     ) -> ProcessingResult:
         """
         Process a batch of documents.
@@ -370,7 +369,7 @@ class FeedbackPipeline:
         if roster_path:
             self.load_roster_from_csv(roster_path)
 
-        documents: List[TeacherDocument] = []
+        documents: list[TeacherDocument] = []
         for path in file_paths:
             try:
                 doc = self.process_document(path)
@@ -405,8 +404,8 @@ class FeedbackPipeline:
 
 # Convenience function for CLI usage
 def create_pipeline(
-    config_path: Optional[str] = None,
-    roster_path: Optional[str] = None,
+    config_path: str | None = None,
+    roster_path: str | None = None,
 ) -> FeedbackPipeline:
     """
     Create a configured pipeline.

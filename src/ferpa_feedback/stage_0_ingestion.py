@@ -15,9 +15,10 @@ This stage is 100% local - no external API calls.
 
 import re
 import uuid
+from collections.abc import Iterator
 from enum import Enum, auto
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any
 
 import structlog
 from docx import Document as DocxDocument
@@ -105,9 +106,9 @@ class DocumentParser:
     ]
 
     def __init__(self) -> None:
-        self._format_detection_cache: Dict[str, DocumentFormat] = {}
+        self._format_detection_cache: dict[str, DocumentFormat] = {}
 
-    def parse_docx(self, file_path: Path, document_id: Optional[str] = None) -> TeacherDocument:
+    def parse_docx(self, file_path: Path, document_id: str | None = None) -> TeacherDocument:
         """
         Parse a Word document into a TeacherDocument.
 
@@ -163,12 +164,11 @@ class DocumentParser:
         Auto-detect the document format by examining structure.
         """
         # Check for tables first
-        if doc.tables:
+        if doc.tables and len(doc.tables[0].rows) > 1:
             # Verify it looks like a comment table
-            if len(doc.tables[0].rows) > 1:
-                header_text = " ".join(c.text.lower() for c in doc.tables[0].rows[0].cells)
-                if any(kw in header_text for kw in ["name", "student", "comment", "grade"]):
-                    return DocumentFormat.TABLE
+            header_text = " ".join(c.text.lower() for c in doc.tables[0].rows[0].cells)
+            if any(kw in header_text for kw in ["name", "student", "comment", "grade"]):
+                return DocumentFormat.TABLE
 
         # Examine first several non-empty paragraphs
         paragraphs = [p.text.strip() for p in doc.paragraphs if p.text.strip()][:10]
@@ -210,7 +210,7 @@ class DocumentParser:
         current_last = None
         current_first = None
         current_grade = None
-        comment_lines: List[str] = []
+        comment_lines: list[str] = []
         section_index = 0
 
         for para in paragraphs:
@@ -263,7 +263,7 @@ class DocumentParser:
         current_last = None
         current_first = None
         current_grade = None
-        comment_lines: List[str] = []
+        comment_lines: list[str] = []
         section_index = 0
 
         for para in paragraphs:
@@ -398,8 +398,8 @@ class DocumentParser:
         section_index: int,
         last_name: str,
         first_name: str,
-        grade: Optional[str],
-        comment_lines: List[str],
+        grade: str | None,
+        comment_lines: list[str],
     ) -> StudentComment:
         """Create a Pydantic StudentComment with computed fields."""
         comment_text = " ".join(comment_lines)
@@ -417,14 +417,14 @@ class DocumentParser:
             # Analysis fields left as defaults (None/empty) - populated by later stages
         )
 
-    def _find_column(self, headers: List[str], candidates: List[str]) -> Optional[int]:
+    def _find_column(self, headers: list[str], candidates: list[str]) -> int | None:
         """Find the index of a column matching any candidate name."""
         for idx, header in enumerate(headers):
             if any(c in header for c in candidates):
                 return idx
         return None
 
-    def _parse_name_string(self, name_str: str) -> Tuple[str, str]:
+    def _parse_name_string(self, name_str: str) -> tuple[str, str]:
         """Parse a name string into (last_name, first_name)."""
         if "," in name_str:
             parts = name_str.split(",", 1)
@@ -444,7 +444,7 @@ class RosterLoader:
     """Loads student rosters and can match against parsed comments."""
 
     @staticmethod
-    def from_csv(file_path: Path) -> List[Dict[str, str]]:
+    def from_csv(file_path: Path) -> list[dict[str, str]]:
         """
         Load roster from CSV file.
 
@@ -452,7 +452,7 @@ class RosterLoader:
         """
         import csv
 
-        roster: List[Dict[str, str]] = []
+        roster: list[dict[str, str]] = []
         with open(file_path, newline='', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             for row in reader:
@@ -468,8 +468,8 @@ class RosterLoader:
 
     @staticmethod
     def match_comment_to_roster(
-        comment: StudentComment, roster: List[Dict[str, str]]
-    ) -> Optional[Dict[str, str]]:
+        comment: StudentComment, roster: list[dict[str, str]]
+    ) -> dict[str, str] | None:
         """
         Find the roster entry matching a comment's student.
 
@@ -495,9 +495,8 @@ class RosterLoader:
             roster_first = entry['first_name'].lower()
             roster_pref = entry.get('preferred_name', '').lower()
 
-            if roster_last == comment_last:
-                if roster_first == comment_first or roster_pref == comment_first:
-                    return entry
+            if roster_last == comment_last and (roster_first == comment_first or roster_pref == comment_first):
+                return entry
 
         return None
 
@@ -506,7 +505,7 @@ class RosterLoader:
 # Convenience Functions
 # =============================================================================
 
-def parse_document(file_path: Union[str, Path]) -> TeacherDocument:
+def parse_document(file_path: str | Path) -> TeacherDocument:
     """
     Parse a document file into a TeacherDocument.
 
@@ -528,7 +527,7 @@ def print_validation_report(doc: TeacherDocument) -> None:
     print(f"Needs review: {doc.needs_review_count}")
 
     if doc.needs_review_count > 0:
-        print(f"\nComments Needing Review:")
+        print("\nComments Needing Review:")
         for c in doc.comments:
             if c.needs_review:
                 print(f"\n  [{c.section_index}] {c.student_name} (Grade: {c.grade})")

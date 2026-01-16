@@ -590,7 +590,7 @@ Final verification and PR creation.
   - **Commit**: `fix(types): resolve mypy strict mode errors`
   - _Requirements: AC-3.4, NFR-8_
 
-- [ ] 4.1.2 Run linting with ruff
+- [x] 4.1.2 Run linting with ruff
   - **Do**: Verify code style with ruff
     1. Run ruff on all source files
     2. Fix any lint errors found

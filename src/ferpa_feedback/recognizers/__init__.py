@@ -5,10 +5,10 @@ such as student IDs, grade levels, and school names.
 """
 
 from ferpa_feedback.recognizers.educational import (
-    StudentIDRecognizer,
+    PRESIDIO_AVAILABLE,
     GradeLevelRecognizer,
     SchoolNameRecognizer,
-    PRESIDIO_AVAILABLE,
+    StudentIDRecognizer,
 )
 
 __all__ = [

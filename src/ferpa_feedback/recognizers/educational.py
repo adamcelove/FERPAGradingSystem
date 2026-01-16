@@ -7,7 +7,7 @@ These recognizers extend Presidio's capabilities to better handle FERPA-protecte
 data in student feedback systems.
 """
 
-from typing import Any, List, Optional, TYPE_CHECKING
+from typing import Any
 
 PRESIDIO_AVAILABLE = False
 _PatternRecognizerBase: Any = None
@@ -38,8 +38,8 @@ if not PRESIDIO_AVAILABLE:
         def __init__(
             self,
             supported_entity: str,
-            patterns: Optional[List[Any]] = None,
-            context: Optional[List[str]] = None,
+            patterns: list[Any] | None = None,
+            context: list[str] | None = None,
             **kwargs: object
         ) -> None:
             self.supported_entity = supported_entity
@@ -128,7 +128,7 @@ class SchoolNameRecognizer(_PatternRecognizerBase):  # type: ignore[misc]
     - r"\\bWashington\\s+Academy\\b"
     """
 
-    def __init__(self, school_patterns: Optional[List[str]] = None) -> None:
+    def __init__(self, school_patterns: list[str] | None = None) -> None:
         """Initialize the SchoolNameRecognizer with configurable patterns.
 
         Args:

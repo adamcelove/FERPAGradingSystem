@@ -17,9 +17,8 @@ Key features:
 """
 
 import json
-import os
 import time
-from typing import Any, Optional
+from typing import Any
 
 import structlog
 
@@ -56,8 +55,8 @@ class FERPAEnforcedClient:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        gate: Optional[AnonymizationGate] = None,
+        api_key: str | None = None,
+        gate: AnonymizationGate | None = None,
         enable_zdr: bool = True,
     ):
         """
@@ -77,7 +76,7 @@ class FERPAEnforcedClient:
         self.gate = gate
         self.enable_zdr = enable_zdr
         self._api_key = api_key
-        self._client: Optional[Any] = None  # Lazy load
+        self._client: Any | None = None  # Lazy load
 
         logger.info(
             "ferpa_client_initialized",
@@ -85,7 +84,7 @@ class FERPAEnforcedClient:
         )
 
     @property
-    def client(self) -> Optional[Any]:
+    def client(self) -> Any | None:
         """Lazy-load Anthropic client."""
         if self._client is None:
             try:
@@ -232,8 +231,8 @@ Rules:
 
     def __init__(
         self,
-        client: Optional[FERPAEnforcedClient] = None,
-        rubric_path: Optional[str] = None,
+        client: FERPAEnforcedClient | None = None,
+        rubric_path: str | None = None,
     ):
         """
         Initialize completeness analyzer.
@@ -247,7 +246,7 @@ Rules:
 
         logger.info("completeness_analyzer_initialized")
 
-    def _call_api_with_retry(self, comment: StudentComment) -> Optional[dict[str, Any]]:
+    def _call_api_with_retry(self, comment: StudentComment) -> dict[str, Any] | None:
         """
         Call API with exponential backoff retry logic.
 
@@ -260,7 +259,7 @@ Rules:
         if self.client is None:
             return None
 
-        last_error: Optional[Exception] = None
+        last_error: Exception | None = None
 
         for attempt in range(self.MAX_RETRIES):
             try:
@@ -305,7 +304,7 @@ Rules:
         )
         return None
 
-    def _parse_response(self, response_text: str) -> Optional[dict[str, Any]]:
+    def _parse_response(self, response_text: str) -> dict[str, Any] | None:
         """
         Parse JSON response from Claude API.
 
@@ -518,7 +517,7 @@ Rules:
     MAX_RETRIES = 3
     RETRY_DELAYS = [1.0, 2.0, 4.0]
 
-    def __init__(self, client: Optional[FERPAEnforcedClient] = None):
+    def __init__(self, client: FERPAEnforcedClient | None = None):
         """
         Initialize consistency analyzer.
 
@@ -533,7 +532,7 @@ Rules:
         self,
         comment: StudentComment,
         grade: str,
-    ) -> Optional[dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Call API with exponential backoff retry logic.
 
@@ -547,7 +546,7 @@ Rules:
         if self.client is None:
             return None
 
-        last_error: Optional[Exception] = None
+        last_error: Exception | None = None
 
         # Format prompt with grade
         prompt_with_grade = self.CONSISTENCY_PROMPT.replace("{grade}", grade)
@@ -595,7 +594,7 @@ Rules:
         )
         return None
 
-    def _parse_response(self, response_text: str) -> Optional[dict[str, Any]]:
+    def _parse_response(self, response_text: str) -> dict[str, Any] | None:
         """
         Parse JSON response from Claude API.
 
@@ -855,8 +854,8 @@ class SemanticAnalysisProcessor:
 
 
 def create_semantic_processor(
-    config: Optional[dict[str, Any]] = None,
-    ferpa_gate: Optional[AnonymizationGate] = None,
+    config: dict[str, Any] | None = None,
+    ferpa_gate: AnonymizationGate | None = None,
 ) -> SemanticAnalysisProcessor:
     """
     Factory function for Stage 4 semantic analysis processor.

@@ -13,10 +13,10 @@ Key features:
 This stage is 100% local - all PII handling stays on-premise.
 """
 
+import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, List, TYPE_CHECKING
-import json
+from typing import TYPE_CHECKING, Any
 
 import structlog
 from pydantic import BaseModel, Field
@@ -48,15 +48,15 @@ class ReviewItem(BaseModel):
 
     # Analysis results
     grammar_issues_count: int = Field(default=0, description="Number of grammar issues")
-    name_match_issues: List[str] = Field(default_factory=list, description="Name matching issues")
-    completeness_score: Optional[float] = Field(default=None, description="Completeness score if available")
-    consistency_issues: List[str] = Field(default_factory=list, description="Consistency issues found")
+    name_match_issues: list[str] = Field(default_factory=list, description="Name matching issues")
+    completeness_score: float | None = Field(default=None, description="Completeness score if available")
+    consistency_issues: list[str] = Field(default_factory=list, description="Consistency issues found")
 
     # Review workflow
-    review_reasons: List[str] = Field(default_factory=list, description="Why this needs review")
+    review_reasons: list[str] = Field(default_factory=list, description="Why this needs review")
     status: ReviewStatus = Field(default=ReviewStatus.PENDING, description="Current review status")
-    reviewer_id: Optional[str] = Field(default=None, description="ID of reviewer")
-    reviewed_at: Optional[datetime] = Field(default=None, description="When reviewed")
+    reviewer_id: str | None = Field(default=None, description="ID of reviewer")
+    reviewed_at: datetime | None = Field(default=None, description="When reviewed")
     reviewer_notes: str = Field(default="", description="Notes from reviewer")
 
 
@@ -69,7 +69,7 @@ class DeAnonymizer:
     the local system.
     """
 
-    def __init__(self, anonymizer: Optional[Anonymizer] = None):
+    def __init__(self, anonymizer: Anonymizer | None = None):
         """
         Initialize de-anonymizer.
 
@@ -109,7 +109,7 @@ class DeAnonymizer:
     def restore_from_mappings(
         self,
         anonymized_text: str,
-        mappings: List[dict[str, str]],
+        mappings: list[dict[str, str]],
     ) -> str:
         """
         Restore text using explicit mappings.
@@ -137,7 +137,7 @@ class ReviewQueue:
     Uses in-memory storage for POC phase.
     """
 
-    def __init__(self, storage_path: Optional[Path] = None):
+    def __init__(self, storage_path: Path | None = None):
         """
         Initialize review queue.
 
@@ -231,7 +231,7 @@ class ReviewQueue:
             reviewer_notes=comment.reviewer_notes,
         )
 
-    def get_pending(self, limit: int = 50) -> List[ReviewItem]:
+    def get_pending(self, limit: int = 50) -> list[ReviewItem]:
         """
         Get pending review items.
 
@@ -251,7 +251,7 @@ class ReviewQueue:
 
         return pending[:limit]
 
-    def get_by_id(self, comment_id: str) -> Optional[ReviewItem]:
+    def get_by_id(self, comment_id: str) -> ReviewItem | None:
         """
         Get a specific review item by ID.
 
@@ -388,8 +388,8 @@ class ReviewProcessor:
 
 # Factory function
 def create_review_processor(
-    storage_path: Optional[Path] = None,
-    config: Optional[dict[str, Any]] = None,
+    storage_path: Path | None = None,
+    config: dict[str, Any] | None = None,
 ) -> ReviewQueue:
     """
     Factory function for Stage 5.
@@ -436,10 +436,10 @@ def create_review_app(queue: ReviewQueue) -> "FastAPI":
     try:
         from fastapi import FastAPI, HTTPException, Query
         from fastapi.responses import HTMLResponse, JSONResponse
-    except ImportError:
+    except ImportError as e:
         raise ImportError(
             "Review UI requires FastAPI. Install with: pip install ferpa-feedback[review-ui]"
-        )
+        ) from e
 
     app = FastAPI(
         title="FERPA Comment Review",
@@ -548,11 +548,11 @@ def create_review_app(queue: ReviewQueue) -> "FastAPI":
         # Convert status string to ReviewStatus enum
         try:
             review_status = ReviewStatus(status.lower())
-        except ValueError:
+        except ValueError as e:
             raise HTTPException(
                 status_code=400,
                 detail=f"Invalid status: {status}. Must be one of: approved, rejected, modified"
-            )
+            ) from e
 
         # Update the status
         queue.update_status(comment_id, review_status, reviewer_id, notes)
