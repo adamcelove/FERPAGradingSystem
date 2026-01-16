@@ -1,0 +1,16 @@
+student_id,first_name,last_name,preferred_name,email,grade_level
+S10000001,John,Smith,,john.smith@school.edu,10
+S10000002,Jane,Doe,Jenny,jane.doe@school.edu,10
+S10000003,Robert,Wilson,Bob,robert.wilson@school.edu,10
+S10000004,Alice,Brown,,alice.brown@school.edu,10
+S10000005,Emily,Chen,,emily.chen@school.edu,10
+S10000006,Michael,O'Brien,Mike,michael.obrien@school.edu,11
+S10000007,Sarah,Smith-Jones,,sarah.smithjones@school.edu,11
+S10000008,Thomas,Johnson,Tom,thomas.johnson@school.edu,11
+S10000009,Jennifer,Garcia,Jen,jennifer.garcia@school.edu,10
+S10000010,David,Lee,,david.lee@school.edu,11
+S10000011,Maria,Rodriguez,Mari,maria.rodriguez@school.edu,10
+S10000012,Christopher,McDonald,Chris,chris.mcdonald@school.edu,11
+S10000013,Amanda,Taylor,,amanda.taylor@school.edu,10
+S10000014,Daniel,Kim,Danny,daniel.kim@school.edu,10
+S10000015,Jessica,Wong,,jessica.wong@school.edu,11

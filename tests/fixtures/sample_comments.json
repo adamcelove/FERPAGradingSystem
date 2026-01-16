@@ -1,0 +1,90 @@
+[
+  {
+    "id": "fixture-001",
+    "document_id": "doc-fixture",
+    "section_index": 0,
+    "student_name": "John Smith",
+    "grade": "B+",
+    "comment_text": "John has shown great improvement in mathematics this term. He actively participates in class discussions and completes his homework on time. He should continue to focus on showing his work in problem-solving exercises."
+  },
+  {
+    "id": "fixture-002",
+    "document_id": "doc-fixture",
+    "section_index": 1,
+    "student_name": "Jane Doe",
+    "grade": "A-",
+    "comment_text": "Jane demonstrates exceptional analytical skills and consistently produces high-quality work. Her essays are well-structured and thoughtfully argued. She could benefit from participating more in class discussions."
+  },
+  {
+    "id": "fixture-003",
+    "document_id": "doc-fixture",
+    "section_index": 2,
+    "student_name": "Bob Wilson",
+    "grade": "C",
+    "comment_text": "Bob needs to improve his study habits and time management. He often submits assignments late and would benefit from seeking help during office hours. With more consistent effort, he can improve his performance."
+  },
+  {
+    "id": "fixture-004",
+    "document_id": "doc-fixture",
+    "section_index": 3,
+    "student_name": "Alice Brown",
+    "grade": "A",
+    "comment_text": "Alice is an outstanding student who consistently exceeds expectations. Her research project was exceptional, demonstrating deep understanding of the subject matter. She is a pleasure to have in class."
+  },
+  {
+    "id": "fixture-005",
+    "document_id": "doc-fixture",
+    "section_index": 4,
+    "student_name": "Emily Chen",
+    "grade": "B",
+    "comment_text": "Emily has made steady progress throughout the term. She works diligently and asks thoughtful questions. To improve further, she should focus on developing her critical analysis skills."
+  },
+  {
+    "id": "fixture-006",
+    "document_id": "doc-fixture",
+    "section_index": 5,
+    "student_name": "Michael O'Brien",
+    "grade": "B-",
+    "comment_text": "Mike shows good understanding of core concepts but struggles with application in complex scenarios. He would benefit from additional practice problems and study group participation."
+  },
+  {
+    "id": "fixture-007",
+    "document_id": "doc-fixture",
+    "section_index": 6,
+    "student_name": "Sarah Smith-Jones",
+    "grade": "A-",
+    "comment_text": "Sarah is a conscientious student who puts careful thought into her work. Her collaborative skills are excellent, and she often helps other students understand difficult concepts."
+  },
+  {
+    "id": "fixture-008",
+    "document_id": "doc-fixture",
+    "section_index": 7,
+    "student_name": "Tom Johnson",
+    "grade": "C+",
+    "comment_text": "Tom has improved significantly since the beginning of the term. While there is still room for growth, his recent quiz scores show he is grasping the material better. Continued effort will lead to further improvement."
+  },
+  {
+    "id": "fixture-pii-001",
+    "document_id": "doc-pii-test",
+    "section_index": 0,
+    "student_name": "Test Student",
+    "grade": "B",
+    "comment_text": "Test Student (ID: S12345678) showed improvement. Contact parent at test@email.com or 555-123-4567 for more details."
+  },
+  {
+    "id": "fixture-grammar-001",
+    "document_id": "doc-grammar-test",
+    "section_index": 0,
+    "student_name": "Grammar Test",
+    "grade": "B",
+    "comment_text": "The student have made good progress. Their understanding of there subject is improving and they consistantly complete there homework."
+  },
+  {
+    "id": "fixture-inconsistent-001",
+    "document_id": "doc-consistency-test",
+    "section_index": 0,
+    "student_name": "Inconsistent Test",
+    "grade": "A",
+    "comment_text": "This student has struggled significantly throughout the term. They rarely complete assignments and show little engagement in class activities. Improvement is needed in all areas."
+  }
+]
