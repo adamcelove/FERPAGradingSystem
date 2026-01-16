@@ -12,6 +12,7 @@ Usage:
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Optional
 
 import typer
 from rich.console import Console
@@ -35,21 +36,21 @@ def process(
         help="Path to .docx file or directory containing documents",
         exists=True,
     ),
-    roster: Path | None = typer.Option(
+    roster: Optional[Path] = typer.Option(
         None,
         "--roster",
         "-r",
         help="Path to roster CSV file for name matching",
         exists=True,
     ),
-    config: Path | None = typer.Option(
+    config: Optional[Path] = typer.Option(
         None,
         "--config",
         "-c",
         help="Path to settings.yaml configuration file",
         exists=True,
     ),
-    output: Path | None = typer.Option(
+    output: Optional[Path] = typer.Option(
         None,
         "--output",
         "-o",

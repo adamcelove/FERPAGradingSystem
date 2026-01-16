@@ -40,7 +40,11 @@ class TestStudentIDRecognizer:
         """StudentIDRecognizer should be creatable without error."""
         recognizer = StudentIDRecognizer()
         assert recognizer is not None
-        assert recognizer.supported_entity == "STUDENT_ID"
+        # Real Presidio uses get_supported_entities() method
+        if PRESIDIO_AVAILABLE:
+            assert "STUDENT_ID" in recognizer.get_supported_entities()
+        else:
+            assert recognizer.supported_entity == "STUDENT_ID"
 
     def test_recognizer_has_patterns(self):
         """StudentIDRecognizer should have predefined patterns."""
@@ -157,7 +161,11 @@ class TestGradeLevelRecognizer:
         """GradeLevelRecognizer should be creatable without error."""
         recognizer = GradeLevelRecognizer()
         assert recognizer is not None
-        assert recognizer.supported_entity == "GRADE_LEVEL"
+        # Real Presidio uses get_supported_entities() method
+        if PRESIDIO_AVAILABLE:
+            assert "GRADE_LEVEL" in recognizer.get_supported_entities()
+        else:
+            assert recognizer.supported_entity == "GRADE_LEVEL"
 
     def test_recognizer_has_patterns(self):
         """GradeLevelRecognizer should have predefined patterns."""
@@ -284,7 +292,11 @@ class TestSchoolNameRecognizer:
         """SchoolNameRecognizer should be creatable with default patterns."""
         recognizer = SchoolNameRecognizer()
         assert recognizer is not None
-        assert recognizer.supported_entity == "SCHOOL_NAME"
+        # Real Presidio uses get_supported_entities() method
+        if PRESIDIO_AVAILABLE:
+            assert "SCHOOL_NAME" in recognizer.get_supported_entities()
+        else:
+            assert recognizer.supported_entity == "SCHOOL_NAME"
         assert len(recognizer.patterns) == 2
 
     def test_recognizer_creation_custom_patterns(self):
@@ -413,10 +425,16 @@ class TestPresidioAvailability:
         grade_level = GradeLevelRecognizer()
         school_name = SchoolNameRecognizer()
 
-        # All should have supported_entity attribute
-        assert student_id.supported_entity == "STUDENT_ID"
-        assert grade_level.supported_entity == "GRADE_LEVEL"
-        assert school_name.supported_entity == "SCHOOL_NAME"
+        # All should have supported_entity accessible
+        # Real Presidio uses get_supported_entities() method
+        if PRESIDIO_AVAILABLE:
+            assert "STUDENT_ID" in student_id.get_supported_entities()
+            assert "GRADE_LEVEL" in grade_level.get_supported_entities()
+            assert "SCHOOL_NAME" in school_name.get_supported_entities()
+        else:
+            assert student_id.supported_entity == "STUDENT_ID"
+            assert grade_level.supported_entity == "GRADE_LEVEL"
+            assert school_name.supported_entity == "SCHOOL_NAME"
 
         # All should have patterns list
         assert isinstance(student_id.patterns, list)
