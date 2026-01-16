@@ -42,7 +42,7 @@ Focus: Get the pipeline running end-to-end by fixing structure, creating missing
 
 ### 1.2 Move and Unify Existing Files
 
-- [ ] 1.2.1 Move models.py to src/ferpa_feedback/
+- [x] 1.2.1 Move models.py to src/ferpa_feedback/
   - **Do**: Move the models file to the new package location (file already has unified Pydantic models)
     1. Copy `models.py` to `src/ferpa_feedback/models.py`
     2. Verify content is unchanged
