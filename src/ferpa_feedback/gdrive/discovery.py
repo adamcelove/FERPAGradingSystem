@@ -15,11 +15,15 @@ Example:
 
 import fnmatch
 import json
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from ferpa_feedback.gdrive.errors import DiscoveryTimeoutError, DriveAccessError
+
+# Set up structured logging
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -480,15 +484,65 @@ class FolderDiscovery:
 
         Returns:
             Folder metadata dict or None if not accessible.
+
+        Raises:
+            DriveAccessError: If the folder cannot be accessed due to permissions.
         """
         try:
+            # Import here to avoid loading Google API libraries until needed
+            from googleapiclient.errors import HttpError
+
             result: Dict[str, Any] = (
                 self._service.files()
                 .get(fileId=folder_id, fields="id,name,mimeType")
                 .execute()
             )
             return result
-        except Exception:
+        except Exception as e:
+            # Check if this is a Google API HTTP error
+            error_class = type(e).__name__
+            if error_class == "HttpError" or "HttpError" in str(type(e)):
+                # Try to get HTTP status code
+                status_code = getattr(e, "status_code", None) or getattr(
+                    getattr(e, "resp", None), "status", None
+                )
+                error_str = str(e).lower()
+
+                logger.error(
+                    "Drive API error getting folder metadata",
+                    extra={
+                        "folder_id": folder_id,
+                        "status_code": status_code,
+                        "error": str(e),
+                    },
+                )
+
+                # 404: File not found
+                if status_code == 404 or "not found" in error_str:
+                    return None
+
+                # 403: Permission denied
+                if status_code == 403 or "forbidden" in error_str:
+                    raise DriveAccessError(
+                        f"Permission denied for folder '{folder_id}'. "
+                        "Please share the folder with the service account or your Google account. "
+                        "Go to Drive > Right-click folder > Share > Add the email address with 'Viewer' or 'Editor' access.",
+                        resource_id=folder_id,
+                    ) from e
+
+                # 401: Auth error
+                if status_code == 401 or "unauthorized" in error_str:
+                    raise DriveAccessError(
+                        f"Authentication failed when accessing folder '{folder_id}'. "
+                        "Your credentials may have expired. Try re-authenticating.",
+                        resource_id=folder_id,
+                    ) from e
+
+            # Log unexpected errors
+            logger.warning(
+                "Unexpected error getting folder metadata",
+                extra={"folder_id": folder_id, "error": str(e)},
+            )
             return None
 
     def _list_folder_contents(
@@ -501,6 +555,9 @@ class FolderDiscovery:
 
         Returns:
             Tuple of (child_folders, documents).
+
+        Raises:
+            DriveAccessError: If the folder cannot be listed due to permissions.
         """
         folders: List[Dict[str, Any]] = []
         documents: List[Dict[str, Any]] = []
@@ -514,16 +571,69 @@ class FolderDiscovery:
             if self._rate_limiter is not None and page_token is not None:
                 self._rate_limiter.acquire()
 
-            response = (
-                self._service.files()
-                .list(
-                    q=query,
-                    fields="nextPageToken,files(id,name,mimeType,modifiedTime,size)",
-                    pageSize=100,
-                    pageToken=page_token,
+            try:
+                response = (
+                    self._service.files()
+                    .list(
+                        q=query,
+                        fields="nextPageToken,files(id,name,mimeType,modifiedTime,size)",
+                        pageSize=100,
+                        pageToken=page_token,
+                    )
+                    .execute()
                 )
-                .execute()
-            )
+            except Exception as e:
+                # Map Google API errors to custom exceptions
+                error_class = type(e).__name__
+                if error_class == "HttpError" or "HttpError" in str(type(e)):
+                    status_code = getattr(e, "status_code", None) or getattr(
+                        getattr(e, "resp", None), "status", None
+                    )
+                    error_str = str(e).lower()
+
+                    logger.error(
+                        "Drive API error listing folder contents",
+                        extra={
+                            "folder_id": folder_id,
+                            "status_code": status_code,
+                            "error": str(e),
+                        },
+                    )
+
+                    # 403: Permission denied
+                    if status_code == 403 or "forbidden" in error_str:
+                        raise DriveAccessError(
+                            f"Permission denied when listing folder '{folder_id}'. "
+                            "Please ensure the folder is shared with your account. "
+                            "Go to Drive > Right-click folder > Share > Add your email with 'Viewer' access.",
+                            resource_id=folder_id,
+                        ) from e
+
+                    # 404: Folder not found
+                    if status_code == 404 or "not found" in error_str:
+                        raise DriveAccessError(
+                            f"Folder '{folder_id}' not found. "
+                            "It may have been deleted or moved.",
+                            resource_id=folder_id,
+                        ) from e
+
+                    # Rate limit errors
+                    if status_code == 429 or "rate limit" in error_str:
+                        raise DriveAccessError(
+                            f"Rate limit exceeded when listing folder '{folder_id}'. "
+                            "Wait a moment and try again, or reduce the discovery depth.",
+                            resource_id=folder_id,
+                        ) from e
+
+                # Log and re-raise unexpected errors
+                logger.error(
+                    "Unexpected error listing folder contents",
+                    extra={"folder_id": folder_id, "error": str(e)},
+                )
+                raise DriveAccessError(
+                    f"Failed to list folder contents for '{folder_id}': {e}",
+                    resource_id=folder_id,
+                ) from e
 
             for item in response.get("files", []):
                 mime_type = item.get("mimeType", "")

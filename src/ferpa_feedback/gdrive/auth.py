@@ -28,6 +28,7 @@ Example:
     service = auth.get_service()
 """
 
+import logging
 import os
 from pathlib import Path
 from typing import Any, List, Optional, Protocol
@@ -36,6 +37,9 @@ from googleapiclient.discovery import Resource, build
 
 from ferpa_feedback.gdrive.config import DriveConfig
 from ferpa_feedback.gdrive.errors import AuthenticationError
+
+# Set up structured logging
+logger = logging.getLogger(__name__)
 
 # Google Drive API version
 DRIVE_API_VERSION = "v3"
@@ -162,29 +166,51 @@ class OAuth2Authenticator:
             if creds is not None and creds.expired and creds.refresh_token:
                 # Refresh the token
                 try:
+                    logger.debug("Refreshing expired OAuth2 token")
                     creds.refresh(Request())  # type: ignore[no-untyped-call]
                 except Exception as e:
+                    logger.error(
+                        "Failed to refresh OAuth2 token",
+                        extra={"error": str(e), "token_path": str(self._token_path)},
+                    )
                     raise AuthenticationError(
-                        f"Failed to refresh OAuth2 token: {e}",
+                        f"Failed to refresh OAuth2 token: {e}. "
+                        "Try deleting the token file and re-authenticating: "
+                        f"rm {self._token_path}",
                         auth_method="oauth2",
                     ) from e
             else:
                 # Run the OAuth2 flow
                 if not self._client_secrets_path.exists():
+                    logger.error(
+                        "Client secrets file not found",
+                        extra={"path": str(self._client_secrets_path)},
+                    )
                     raise AuthenticationError(
                         f"Client secrets file not found: {self._client_secrets_path}. "
-                        "Download from Google Cloud Console.",
+                        "Download OAuth2 credentials from Google Cloud Console: "
+                        "https://console.cloud.google.com/apis/credentials",
                         auth_method="oauth2",
                     )
 
                 try:
+                    logger.info("Starting OAuth2 flow - browser will open for authorization")
                     flow = InstalledAppFlow.from_client_secrets_file(
                         str(self._client_secrets_path), self._scopes
                     )
                     creds = flow.run_local_server(port=0)
                 except Exception as e:
+                    logger.error(
+                        "OAuth2 flow failed",
+                        extra={
+                            "error": str(e),
+                            "client_secrets_path": str(self._client_secrets_path),
+                        },
+                    )
                     raise AuthenticationError(
-                        f"OAuth2 flow failed: {e}",
+                        f"OAuth2 flow failed: {e}. "
+                        "Ensure you have enabled the Google Drive API in your GCP project "
+                        "and configured the OAuth consent screen.",
                         auth_method="oauth2",
                     ) from e
 
@@ -205,9 +231,15 @@ class OAuth2Authenticator:
                 DRIVE_API_VERSION,
                 credentials=creds,
             )
+            logger.info("Successfully authenticated with Google Drive API")
         except Exception as e:
+            logger.error(
+                "Failed to build Drive API service",
+                extra={"error": str(e)},
+            )
             raise AuthenticationError(
-                f"Failed to build Drive API service: {e}",
+                f"Failed to build Drive API service: {e}. "
+                "This may indicate a network issue or API availability problem.",
                 auth_method="oauth2",
             ) from e
 
@@ -342,6 +374,16 @@ class WorkloadIdentityAuthenticator:
             import google.auth
             from google.auth.transport.requests import Request
 
+            logger.debug(
+                "Attempting Workload Identity Federation authentication",
+                extra={
+                    "project_id": self._project_id,
+                    "pool_id": self._pool_id,
+                    "provider_id": self._provider_id,
+                    "service_account": self._service_account_email_value,
+                },
+            )
+
             # Get default credentials - in Cloud Run with WIF configured,
             # this automatically handles the identity federation
             credentials, project = google.auth.default(  # type: ignore[no-untyped-call]
@@ -353,13 +395,29 @@ class WorkloadIdentityAuthenticator:
                 credentials.refresh(Request())  # type: ignore[no-untyped-call]
 
             self._credentials = credentials
+            logger.info(
+                "Successfully authenticated with Workload Identity Federation",
+                extra={"project": project},
+            )
 
         except Exception as e:
+            logger.error(
+                "Workload Identity Federation authentication failed",
+                extra={
+                    "error": str(e),
+                    "project_id": self._project_id,
+                    "service_account": self._service_account_email_value,
+                },
+            )
             raise AuthenticationError(
                 f"Workload Identity Federation authentication failed: {e}. "
-                "Ensure the Cloud Run service has WIF configured correctly "
-                f"and the service account {self._service_account_email_value} "
-                "has the necessary permissions.",
+                "Ensure the Cloud Run service has WIF configured correctly:\n"
+                f"  1. Project ID: {self._project_id}\n"
+                f"  2. Pool ID: {self._pool_id}\n"
+                f"  3. Provider ID: {self._provider_id}\n"
+                f"  4. Service Account: {self._service_account_email_value}\n"
+                "Verify that the service account has 'roles/iam.workloadIdentityUser' "
+                "and the necessary Drive API scopes.",
                 auth_method="workload_identity",
             ) from e
 
@@ -371,8 +429,13 @@ class WorkloadIdentityAuthenticator:
                 credentials=self._credentials,
             )
         except Exception as e:
+            logger.error(
+                "Failed to build Drive API service",
+                extra={"error": str(e)},
+            )
             raise AuthenticationError(
-                f"Failed to build Drive API service: {e}",
+                f"Failed to build Drive API service: {e}. "
+                "This may indicate a network issue or API availability problem.",
                 auth_method="workload_identity",
             ) from e
 

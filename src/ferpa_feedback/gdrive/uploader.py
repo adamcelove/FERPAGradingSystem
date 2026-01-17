@@ -10,6 +10,7 @@ Example:
     result = uploader.upload_grammar_report(report_content, original_doc, folder_id)
 """
 
+import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
@@ -17,7 +18,10 @@ from io import BytesIO
 from typing import Any, Optional
 
 from ferpa_feedback.gdrive.discovery import DriveDocument
-from ferpa_feedback.gdrive.errors import UploadError
+from ferpa_feedback.gdrive.errors import DriveAccessError, UploadError
+
+# Set up structured logging
+logger = logging.getLogger(__name__)
 
 
 class UploadMode(Enum):
@@ -198,6 +202,7 @@ class ResultUploader:
 
         Raises:
             UploadError: If folder creation fails.
+            DriveAccessError: If write access is denied.
         """
         # Apply rate limiting if configured
         if self._rate_limiter is not None:
@@ -242,6 +247,44 @@ class ResultUploader:
             return str(folder["id"])
 
         except Exception as e:
+            error_str = str(e).lower()
+            error_class = type(e).__name__
+
+            # Log the error with structured fields
+            logger.error(
+                "Failed to ensure output folder",
+                extra={
+                    "parent_folder_id": parent_folder_id,
+                    "folder_name": folder_name,
+                    "error": str(e),
+                    "error_type": error_class,
+                },
+            )
+
+            # Check for HTTP errors from Google API
+            if error_class == "HttpError" or "HttpError" in str(type(e)):
+                status_code = getattr(e, "status_code", None) or getattr(
+                    getattr(e, "resp", None), "status", None
+                )
+
+                # 403: Permission denied - need Editor access
+                if status_code == 403 or "forbidden" in error_str:
+                    raise DriveAccessError(
+                        f"Permission denied when creating folder '{folder_name}'. "
+                        "You need 'Editor' access to the parent folder to create subfolders. "
+                        "Go to Drive > Right-click parent folder > Share > "
+                        "Change your access level from 'Viewer' to 'Editor'.",
+                        resource_id=parent_folder_id,
+                    ) from e
+
+                # 404: Parent folder not found
+                if status_code == 404 or "not found" in error_str:
+                    raise DriveAccessError(
+                        f"Parent folder '{parent_folder_id}' not found. "
+                        "It may have been deleted or moved.",
+                        resource_id=parent_folder_id,
+                    ) from e
+
             raise UploadError(
                 f"Failed to create output folder '{folder_name}': {e}",
                 folder_id=parent_folder_id,
@@ -352,8 +395,16 @@ class ResultUploader:
                 return str(files[0]["id"])
             return None
 
-        except Exception:
-            # If search fails, assume file doesn't exist
+        except Exception as e:
+            # Log but don't fail - if search fails, assume file doesn't exist
+            logger.warning(
+                "Failed to search for existing file",
+                extra={
+                    "file_name": file_name,
+                    "folder_id": folder_id,
+                    "error": str(e),
+                },
+            )
             return None
 
     def _create_file(
@@ -373,7 +424,8 @@ class ResultUploader:
             ID of the created file.
 
         Raises:
-            Exception: If file creation fails.
+            UploadError: If file creation fails.
+            DriveAccessError: If write access is denied.
         """
         from googleapiclient.http import MediaIoBaseUpload
 
@@ -391,13 +443,68 @@ class ResultUploader:
             resumable=True,
         )
 
-        file_result = (
-            self._service.files()
-            .create(body=file_metadata, media_body=media, fields="id")
-            .execute()
-        )
+        try:
+            file_result = (
+                self._service.files()
+                .create(body=file_metadata, media_body=media, fields="id")
+                .execute()
+            )
 
-        return str(file_result["id"])
+            return str(file_result["id"])
+
+        except Exception as e:
+            error_str = str(e).lower()
+            error_class = type(e).__name__
+
+            # Log the error with structured fields
+            logger.error(
+                "Failed to create file",
+                extra={
+                    "file_name": file_name,
+                    "folder_id": folder_id,
+                    "error": str(e),
+                    "error_type": error_class,
+                },
+            )
+
+            # Check for HTTP errors from Google API
+            if error_class == "HttpError" or "HttpError" in str(type(e)):
+                status_code = getattr(e, "status_code", None) or getattr(
+                    getattr(e, "resp", None), "status", None
+                )
+
+                # 403: Permission denied - need Editor access
+                if status_code == 403 or "forbidden" in error_str:
+                    raise DriveAccessError(
+                        f"Permission denied when creating file '{file_name}'. "
+                        "You need 'Editor' access to upload files to this folder. "
+                        "Go to Drive > Right-click folder > Share > "
+                        "Change access level from 'Viewer' to 'Editor'.",
+                        resource_id=folder_id,
+                    ) from e
+
+                # 404: Parent folder not found
+                if status_code == 404 or "not found" in error_str:
+                    raise DriveAccessError(
+                        f"Folder '{folder_id}' not found. "
+                        "It may have been deleted or moved.",
+                        resource_id=folder_id,
+                    ) from e
+
+                # 507: Storage quota exceeded
+                if status_code == 507 or "storage quota" in error_str:
+                    raise UploadError(
+                        f"Storage quota exceeded when uploading '{file_name}'. "
+                        "Free up space in your Google Drive or upgrade storage.",
+                        folder_id=folder_id,
+                        file_name=file_name,
+                    ) from e
+
+            raise UploadError(
+                f"Failed to create file '{file_name}': {e}",
+                folder_id=folder_id,
+                file_name=file_name,
+            ) from e
 
     def _update_file(
         self,
@@ -414,7 +521,8 @@ class ResultUploader:
             ID of the updated file.
 
         Raises:
-            Exception: If file update fails.
+            UploadError: If file update fails.
+            DriveAccessError: If write access is denied.
         """
         from googleapiclient.http import MediaIoBaseUpload
 
@@ -427,10 +535,55 @@ class ResultUploader:
             resumable=True,
         )
 
-        file_result = (
-            self._service.files()
-            .update(fileId=file_id, media_body=media, fields="id")
-            .execute()
-        )
+        try:
+            file_result = (
+                self._service.files()
+                .update(fileId=file_id, media_body=media, fields="id")
+                .execute()
+            )
 
-        return str(file_result["id"])
+            return str(file_result["id"])
+
+        except Exception as e:
+            error_str = str(e).lower()
+            error_class = type(e).__name__
+
+            # Log the error with structured fields
+            logger.error(
+                "Failed to update file",
+                extra={
+                    "file_id": file_id,
+                    "error": str(e),
+                    "error_type": error_class,
+                },
+            )
+
+            # Check for HTTP errors from Google API
+            if error_class == "HttpError" or "HttpError" in str(type(e)):
+                status_code = getattr(e, "status_code", None) or getattr(
+                    getattr(e, "resp", None), "status", None
+                )
+
+                # 403: Permission denied - need Editor access
+                if status_code == 403 or "forbidden" in error_str:
+                    raise DriveAccessError(
+                        f"Permission denied when updating file '{file_id}'. "
+                        "You need 'Editor' access to modify this file. "
+                        "Go to Drive > Right-click file > Share > "
+                        "Change access level from 'Viewer' to 'Editor'.",
+                        resource_id=file_id,
+                    ) from e
+
+                # 404: File not found
+                if status_code == 404 or "not found" in error_str:
+                    raise DriveAccessError(
+                        f"File '{file_id}' not found. "
+                        "It may have been deleted or moved.",
+                        resource_id=file_id,
+                    ) from e
+
+            raise UploadError(
+                f"Failed to update file '{file_id}': {e}",
+                folder_id="",
+                file_name=file_id,
+            ) from e

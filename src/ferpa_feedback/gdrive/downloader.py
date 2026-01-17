@@ -12,6 +12,7 @@ Example:
     # downloaded.content is a BytesIO object ready for parsing
 """
 
+import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
@@ -19,7 +20,15 @@ from io import BytesIO
 from typing import Any, Callable, Iterator, List, Optional, Union
 
 from ferpa_feedback.gdrive.discovery import DriveDocument
-from ferpa_feedback.gdrive.errors import DownloadError, DriveExportError, FileTooLargeError
+from ferpa_feedback.gdrive.errors import (
+    DownloadError,
+    DriveAccessError,
+    DriveExportError,
+    FileTooLargeError,
+)
+
+# Set up structured logging
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -216,6 +225,7 @@ class DocumentDownloader:
         Raises:
             DriveExportError: If export fails.
             FileTooLargeError: If document exceeds 10MB export limit.
+            DriveAccessError: If access is denied.
         """
         try:
             # Use files().export() for Google Docs
@@ -238,6 +248,42 @@ class DocumentDownloader:
 
         except Exception as e:
             error_str = str(e).lower()
+            error_class = type(e).__name__
+
+            # Log the error with structured fields
+            logger.error(
+                "Failed to export Google Doc",
+                extra={
+                    "file_id": doc.id,
+                    "file_name": doc.name,
+                    "mime_type": doc.mime_type,
+                    "error": str(e),
+                    "error_type": error_class,
+                },
+            )
+
+            # Check for HTTP errors from Google API
+            if error_class == "HttpError" or "HttpError" in str(type(e)):
+                status_code = getattr(e, "status_code", None) or getattr(
+                    getattr(e, "resp", None), "status", None
+                )
+
+                # 403: Permission denied
+                if status_code == 403 or "forbidden" in error_str:
+                    raise DriveAccessError(
+                        f"Permission denied when exporting '{doc.name}'. "
+                        "Please ensure the document is shared with your account. "
+                        "Go to Drive > Right-click file > Share > Add your email.",
+                        resource_id=doc.id,
+                    ) from e
+
+                # 404: File not found
+                if status_code == 404 or "not found" in error_str:
+                    raise DriveAccessError(
+                        f"Document '{doc.name}' (ID: {doc.id}) not found. "
+                        "It may have been deleted or moved.",
+                        resource_id=doc.id,
+                    ) from e
 
             # Check for size limit errors
             if "too large" in error_str or "exceeds" in error_str:
@@ -264,6 +310,7 @@ class DocumentDownloader:
 
         Raises:
             DownloadError: If download fails.
+            DriveAccessError: If access is denied.
         """
         try:
             # Use files().get_media() for direct download
@@ -282,6 +329,52 @@ class DocumentDownloader:
             return content
 
         except Exception as e:
+            error_str = str(e).lower()
+            error_class = type(e).__name__
+
+            # Log the error with structured fields
+            logger.error(
+                "Failed to download file",
+                extra={
+                    "file_id": doc.id,
+                    "file_name": doc.name,
+                    "mime_type": doc.mime_type,
+                    "error": str(e),
+                    "error_type": error_class,
+                },
+            )
+
+            # Check for HTTP errors from Google API
+            if error_class == "HttpError" or "HttpError" in str(type(e)):
+                status_code = getattr(e, "status_code", None) or getattr(
+                    getattr(e, "resp", None), "status", None
+                )
+
+                # 403: Permission denied
+                if status_code == 403 or "forbidden" in error_str:
+                    raise DriveAccessError(
+                        f"Permission denied when downloading '{doc.name}'. "
+                        "Please ensure the file is shared with your account. "
+                        "Go to Drive > Right-click file > Share > Add your email.",
+                        resource_id=doc.id,
+                    ) from e
+
+                # 404: File not found
+                if status_code == 404 or "not found" in error_str:
+                    raise DriveAccessError(
+                        f"File '{doc.name}' (ID: {doc.id}) not found. "
+                        "It may have been deleted or moved.",
+                        resource_id=doc.id,
+                    ) from e
+
+                # 429: Rate limit exceeded
+                if status_code == 429 or "rate limit" in error_str:
+                    raise DownloadError(
+                        f"Rate limit exceeded when downloading '{doc.name}'. "
+                        "Wait a moment and try again.",
+                        file_id=doc.id,
+                    ) from e
+
             raise DownloadError(
                 f"Failed to download file '{doc.name}': {e}",
                 file_id=doc.id,
