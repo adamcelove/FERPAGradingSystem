@@ -31,7 +31,7 @@ Focus: Validate the idea works end-to-end. Skip tests, accept hardcoded values, 
 
 ### 1.2 Implement OAuth2 authenticator for local development
 
-- [ ] 1.2 Implement OAuth2 authenticator for local development
+- [x] 1.2 Implement OAuth2 authenticator for local development
   - **Do**:
     1. Create `src/ferpa_feedback/gdrive/auth.py`
     2. Implement `DriveAuthenticator` protocol with `get_service()` and `service_account_email` property
