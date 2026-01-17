@@ -489,9 +489,6 @@ class FolderDiscovery:
             DriveAccessError: If the folder cannot be accessed due to permissions.
         """
         try:
-            # Import here to avoid loading Google API libraries until needed
-            from googleapiclient.errors import HttpError
-
             result: Dict[str, Any] = (
                 self._service.files()
                 .get(fileId=folder_id, fields="id,name,mimeType")
