@@ -78,7 +78,7 @@ Focus: Validate the idea works end-to-end. Skip tests, accept hardcoded values, 
 
 ### 1.5 Implement DocumentDownloader with BytesIO streaming
 
-- [ ] 1.5 Implement DocumentDownloader with BytesIO streaming
+- [x] 1.5 Implement DocumentDownloader with BytesIO streaming
   - **Do**:
     1. Create `src/ferpa_feedback/gdrive/downloader.py`
     2. Implement `DownloadedDocument` dataclass with drive_document, content (BytesIO), export_mime_type, download_time_seconds
