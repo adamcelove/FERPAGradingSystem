@@ -334,7 +334,7 @@ After POC validated, clean up code and add robustness.
 
 ### 2.6 Add upload retry with exponential backoff
 
-- [ ] 2.6 Add upload retry with exponential backoff
+- [x] 2.6 Add upload retry with exponential backoff
   - **Do**:
     1. Modify `src/ferpa_feedback/gdrive/uploader.py`
     2. Implement retry decorator or inline retry logic
@@ -351,7 +351,7 @@ After POC validated, clean up code and add robustness.
 
 ### 2.7 Add interactive folder selection mode
 
-- [ ] 2.7 Add interactive folder selection mode
+- [x] 2.7 Add interactive folder selection mode
   - **Do**:
     1. Modify `src/ferpa_feedback/cli.py`
     2. Add `--interactive/-i` option to gdrive-process command
@@ -368,7 +368,7 @@ After POC validated, clean up code and add robustness.
 
 ### 2.8 Quality Checkpoint
 
-- [ ] 2.8 Quality Checkpoint
+- [x] 2.8 Quality Checkpoint
   - **Do**: Run all quality checks to verify refactoring doesn't break the build
   - **Verify**: All commands must pass:
     - Type check: `python -m mypy src/ferpa_feedback --ignore-missing-imports`
@@ -380,7 +380,7 @@ After POC validated, clean up code and add robustness.
 
 ### 3.1 Unit tests for discovery module
 
-- [ ] 3.1 Unit tests for discovery module
+- [x] 3.1 Unit tests for discovery module
   - **Do**:
     1. Create `tests/test_gdrive_discovery.py`
     2. Add tests:
@@ -401,7 +401,7 @@ After POC validated, clean up code and add robustness.
 
 ### 3.2 Unit tests for downloader module
 
-- [ ] 3.2 Unit tests for downloader module
+- [x] 3.2 Unit tests for downloader module
   - **Do**:
     1. Create `tests/test_gdrive_downloader.py`
     2. Add tests:
@@ -421,7 +421,7 @@ After POC validated, clean up code and add robustness.
 
 ### 3.3 Unit tests for uploader module
 
-- [ ] 3.3 Unit tests for uploader module
+- [x] 3.3 Unit tests for uploader module
   - **Do**:
     1. Create `tests/test_gdrive_uploader.py`
     2. Add tests:
@@ -441,7 +441,7 @@ After POC validated, clean up code and add robustness.
 
 ### 3.4 Quality Checkpoint
 
-- [ ] 3.4 Quality Checkpoint
+- [x] 3.4 Quality Checkpoint
   - **Do**: Run all quality checks to verify tests don't introduce issues
   - **Verify**: All commands must pass:
     - Type check: `python -m mypy src/ferpa_feedback tests --ignore-missing-imports`
@@ -452,7 +452,7 @@ After POC validated, clean up code and add robustness.
 
 ### 3.5 Unit tests for DocumentParser BytesIO support
 
-- [ ] 3.5 Unit tests for DocumentParser BytesIO support
+- [x] 3.5 Unit tests for DocumentParser BytesIO support
   - **Do**:
     1. Modify `tests/test_stage_0_ingestion.py` or create if not exists
     2. Add tests:
