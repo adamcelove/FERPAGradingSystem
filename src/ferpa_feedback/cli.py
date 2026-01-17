@@ -19,6 +19,8 @@ from typing import Any, List, Optional
 import typer
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.prompt import Prompt
+from rich.table import Table
 from rich.tree import Tree
 
 from ferpa_feedback.models import TeacherDocument
@@ -435,6 +437,12 @@ def gdrive_process(
         "-p",
         help="Number of parallel downloads (default: 5)",
     ),
+    interactive: bool = typer.Option(
+        False,
+        "--interactive",
+        "-i",
+        help="Interactively select folders to process",
+    ),
 ) -> None:
     """
     Process documents from Google Drive through the FERPA pipeline.
@@ -547,8 +555,17 @@ def gdrive_process(
         console.print(f"  Leaf folders (processing targets): {len(folder_map.get_leaf_folders())}")
         raise typer.Exit(0)
 
-    # Process documents
-    target_patterns = list(target_folder) if target_folder else None
+    # Handle --interactive option
+    target_patterns: Optional[List[str]] = None
+    if interactive:
+        selected_patterns = _interactive_folder_selection(processor, root_folder, authenticator, console)
+        if not selected_patterns:
+            console.print("[yellow]No folders selected. Exiting.[/]")
+            raise typer.Exit(0)
+        target_patterns = selected_patterns
+    else:
+        # Process documents
+        target_patterns = list(target_folder) if target_folder else None
 
     if target_patterns:
         console.print(f"[dim]Target patterns: {', '.join(target_patterns)}[/]")
@@ -611,6 +628,110 @@ def gdrive_process(
         raise typer.Exit(1)
     elif summary.failed > 0:
         raise typer.Exit(2)  # Partial success
+
+
+def _interactive_folder_selection(
+    processor: Any,
+    root_folder: str,
+    authenticator: Any,
+    console: Console,
+) -> Optional[List[str]]:
+    """Interactively select folders to process.
+
+    Displays a numbered list of unique folder names and allows the user
+    to select which folders to process by number or name.
+
+    Args:
+        processor: DriveProcessor instance.
+        root_folder: Root folder ID to scan.
+        authenticator: Authenticated Drive authenticator.
+        console: Rich console for output.
+
+    Returns:
+        List of selected folder name patterns, or None if cancelled.
+    """
+    # Discover folder structure
+    console.print("\n[bold]Discovering folder structure...[/]")
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        progress.add_task("Scanning folders...", total=None)
+        try:
+            folder_map = processor.list_folders(root_folder)
+        except Exception as e:
+            console.print(f"[red]Failed to access folder:[/] {e}")
+            console.print(f"\n[yellow]Make sure the folder is shared with {authenticator.service_account_email}[/]")
+            return None
+
+    # Get leaf folders (processing targets)
+    leaf_folders = folder_map.get_leaf_folders()
+    if not leaf_folders:
+        console.print("[yellow]No leaf folders found to process.[/]")
+        return None
+
+    # Extract unique folder names at leaf level
+    unique_names: dict[str, int] = {}
+    for folder in leaf_folders:
+        name = folder.name
+        unique_names[name] = unique_names.get(name, 0) + 1
+
+    # Sort names for consistent display
+    sorted_names = sorted(unique_names.keys())
+
+    # Display folder options in a table
+    console.print("\n[bold]Available folders to process:[/]")
+    table = Table(show_header=True, header_style="bold")
+    table.add_column("#", style="dim", width=4)
+    table.add_column("Folder Name")
+    table.add_column("Count", justify="right")
+
+    for idx, name in enumerate(sorted_names, 1):
+        count = unique_names[name]
+        count_str = f"{count} folder{'s' if count > 1 else ''}"
+        table.add_row(str(idx), name, count_str)
+
+    console.print(table)
+    console.print()
+
+    # Prompt for selection
+    console.print("[dim]Enter folder numbers (comma-separated), names, or patterns (e.g., '1,3' or 'September*')[/]")
+    console.print("[dim]Press Enter with no input to process all folders, or 'q' to quit[/]")
+
+    selection = Prompt.ask("Select folders", default="")
+
+    if selection.lower() == "q":
+        return None
+
+    if not selection.strip():
+        # Empty input = process all
+        console.print("[green]Processing all leaf folders[/]")
+        return None  # None means no filter, process all
+
+    # Parse selection
+    selected_patterns: List[str] = []
+    parts = [p.strip() for p in selection.split(",")]
+
+    for part in parts:
+        if not part:
+            continue
+
+        # Check if it's a number
+        try:
+            num = int(part)
+            if 1 <= num <= len(sorted_names):
+                selected_patterns.append(sorted_names[num - 1])
+            else:
+                console.print(f"[yellow]Invalid number: {num} (must be 1-{len(sorted_names)})[/]")
+        except ValueError:
+            # Not a number, treat as name or pattern
+            selected_patterns.append(part)
+
+    if selected_patterns:
+        console.print(f"[green]Selected: {', '.join(selected_patterns)}[/]")
+
+    return selected_patterns if selected_patterns else None
 
 
 def _print_folder_tree(node: Any, console: Console, prefix: str = "") -> None:
