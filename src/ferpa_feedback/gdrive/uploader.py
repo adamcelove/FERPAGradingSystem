@@ -13,6 +13,7 @@ Example:
 import logging
 import time
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from io import BytesIO
 from typing import Any, Optional
@@ -299,6 +300,8 @@ class ResultUploader:
     ) -> UploadResult:
         """Upload a text file to Google Drive with retry logic.
 
+        Uses exponential backoff for retries: 1s, 2s, 4s, etc.
+
         Args:
             content: Text content to upload.
             file_name: Name for the uploaded file.
@@ -313,8 +316,10 @@ class ResultUploader:
         start_time = time.time()
         last_error: Optional[Exception] = None
 
-        # For POC, only implement OVERWRITE mode
-        # VERSION and SKIP modes will be added in Phase 2
+        # Handle VERSION mode: append timestamp to filename
+        actual_file_name = file_name
+        if self._upload_mode == UploadMode.VERSION:
+            actual_file_name = self._versioned_filename(file_name)
 
         for attempt in range(self._max_retries):
             try:
@@ -322,21 +327,49 @@ class ResultUploader:
                 if self._rate_limiter is not None:
                     self._rate_limiter.acquire()
 
-                # Check for existing file with same name (for OVERWRITE mode)
-                existing_file_id = self._find_existing_file(file_name, folder_id)
-
-                if existing_file_id is not None:
-                    # OVERWRITE: Update existing file
-                    file_id = self._update_file(existing_file_id, content)
-                else:
-                    # Create new file
+                # Handle different upload modes
+                if self._upload_mode == UploadMode.SKIP:
+                    existing_file_id = self._find_existing_file(file_name, folder_id)
+                    if existing_file_id is not None:
+                        # File exists, skip upload
+                        logger.info(
+                            "Skipping upload - file already exists",
+                            extra={
+                                "file_name": file_name,
+                                "folder_id": folder_id,
+                                "existing_file_id": existing_file_id,
+                            },
+                        )
+                        upload_time = time.time() - start_time
+                        return UploadResult(
+                            file_id=existing_file_id,
+                            file_name=file_name,
+                            parent_folder_id=folder_id,
+                            success=True,
+                            upload_time_seconds=upload_time,
+                        )
+                    # File doesn't exist, create it
                     file_id = self._create_file(content, file_name, folder_id)
+
+                elif self._upload_mode == UploadMode.VERSION:
+                    # Always create new file with timestamp in name
+                    file_id = self._create_file(content, actual_file_name, folder_id)
+
+                else:  # OVERWRITE (default)
+                    # Check for existing file with same name
+                    existing_file_id = self._find_existing_file(file_name, folder_id)
+                    if existing_file_id is not None:
+                        # OVERWRITE: Update existing file
+                        file_id = self._update_file(existing_file_id, content)
+                    else:
+                        # Create new file
+                        file_id = self._create_file(content, file_name, folder_id)
 
                 upload_time = time.time() - start_time
 
                 return UploadResult(
                     file_id=file_id,
-                    file_name=file_name,
+                    file_name=actual_file_name,
                     parent_folder_id=folder_id,
                     success=True,
                     upload_time_seconds=upload_time,
@@ -344,24 +377,65 @@ class ResultUploader:
 
             except Exception as e:
                 last_error = e
-                # Log retry attempt (would use structlog in production)
                 if attempt < self._max_retries - 1:
-                    # Basic backoff: wait before retry
-                    time.sleep(1)
+                    # Exponential backoff: 1s, 2s, 4s, etc.
+                    backoff_seconds = 2**attempt
+                    logger.warning(
+                        "Upload failed, retrying with exponential backoff",
+                        extra={
+                            "file_name": actual_file_name,
+                            "folder_id": folder_id,
+                            "attempt": attempt + 1,
+                            "max_retries": self._max_retries,
+                            "backoff_seconds": backoff_seconds,
+                            "error": str(e),
+                            "error_type": type(e).__name__,
+                        },
+                    )
+                    time.sleep(backoff_seconds)
                     continue
 
         # All retries exhausted
         upload_time = time.time() - start_time
-        error_msg = f"Failed to upload '{file_name}' after {self._max_retries} attempts: {last_error}"
+        error_msg = f"Failed to upload '{actual_file_name}' after {self._max_retries} attempts: {last_error}"
+
+        logger.error(
+            "Upload failed after all retries",
+            extra={
+                "file_name": actual_file_name,
+                "folder_id": folder_id,
+                "attempts": self._max_retries,
+                "error": str(last_error),
+                "error_type": type(last_error).__name__ if last_error else None,
+            },
+        )
 
         return UploadResult(
             file_id="",
-            file_name=file_name,
+            file_name=actual_file_name,
             parent_folder_id=folder_id,
             success=False,
             error=error_msg,
             upload_time_seconds=upload_time,
         )
+
+    def _versioned_filename(self, file_name: str) -> str:
+        """Generate a versioned filename with timestamp.
+
+        Appends a timestamp before the file extension to create unique filenames.
+        Example: "report.txt" -> "report_20260117_143052.txt"
+
+        Args:
+            file_name: Original file name.
+
+        Returns:
+            Versioned file name with timestamp.
+        """
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        if "." in file_name:
+            name_part, ext_part = file_name.rsplit(".", 1)
+            return f"{name_part}_{timestamp}.{ext_part}"
+        return f"{file_name}_{timestamp}"
 
     def _find_existing_file(
         self,
