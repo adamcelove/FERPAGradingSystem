@@ -115,7 +115,7 @@ Focus: Validate the idea works end-to-end. Skip tests, accept hardcoded values, 
 
 ### 1.7 Implement ResultUploader
 
-- [ ] 1.7 Implement ResultUploader
+- [x] 1.7 Implement ResultUploader
   - **Do**:
     1. Create `src/ferpa_feedback/gdrive/uploader.py`
     2. Implement `UploadMode` enum with OVERWRITE, VERSION, SKIP
