@@ -207,7 +207,7 @@ Focus: Validate the idea works end-to-end. Skip tests, accept hardcoded values, 
 
 ### 1.12 Update pyproject.toml with google-auth dependency
 
-- [ ] 1.12 Update pyproject.toml with google-auth dependency
+- [x] 1.12 Update pyproject.toml with google-auth dependency
   - **Do**:
     1. Modify `pyproject.toml`
     2. Add `google-auth>=2.20.0` and `google-auth-httplib2>=0.2.0` to dependencies
