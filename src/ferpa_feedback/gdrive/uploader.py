@@ -375,7 +375,7 @@ class ResultUploader:
         Raises:
             Exception: If file creation fails.
         """
-        from googleapiclient.http import MediaIoBaseUpload  # type: ignore[import-untyped]
+        from googleapiclient.http import MediaIoBaseUpload
 
         file_metadata = {
             "name": file_name,
@@ -416,7 +416,7 @@ class ResultUploader:
         Raises:
             Exception: If file update fails.
         """
-        from googleapiclient.http import MediaIoBaseUpload  # type: ignore[import-untyped]
+        from googleapiclient.http import MediaIoBaseUpload
 
         # Convert content to BytesIO
         content_bytes = BytesIO(content.encode("utf-8"))

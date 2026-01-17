@@ -287,6 +287,6 @@ class DocumentDownloader:
         Returns:
             MediaIoBaseDownload instance.
         """
-        from googleapiclient.http import MediaIoBaseDownload  # type: ignore[import-untyped]
+        from googleapiclient.http import MediaIoBaseDownload
 
         return MediaIoBaseDownload(content, request)
