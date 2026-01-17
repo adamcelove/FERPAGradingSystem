@@ -1,0 +1,13 @@
+{
+  "source": "spec",
+  "name": "google-drive-integration",
+  "basePath": "./specs/google-drive-integration",
+  "phase": "execution",
+  "taskIndex": 7,
+  "totalTasks": 32,
+  "taskIteration": 2,
+  "maxTaskIterations": 5,
+  "globalIteration": 13,
+  "maxGlobalIterations": 100,
+  "awaitingApproval": false
+}

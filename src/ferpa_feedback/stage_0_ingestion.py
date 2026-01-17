@@ -19,8 +19,9 @@ import re
 import uuid
 from collections.abc import Iterator
 from enum import Enum, auto
+from io import BytesIO
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, Optional, Union
 
 import structlog
 from docx import Document as DocxDocument
@@ -108,23 +109,42 @@ class DocumentParser:
     ]
 
     def __init__(self) -> None:
-        self._format_detection_cache: dict[str, DocumentFormat] = {}
+        self._format_detection_cache: Dict[str, DocumentFormat] = {}
 
-    def parse_docx(self, file_path: Path, document_id: str | None = None) -> TeacherDocument:
+    def parse_docx(
+        self,
+        source: Union[Path, BytesIO],
+        document_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> TeacherDocument:
         """
         Parse a Word document into a TeacherDocument.
 
         Args:
-            file_path: Path to the .docx file
+            source: Path to the .docx file, or BytesIO stream containing .docx content
             document_id: Optional ID (generated if not provided)
+            metadata: Optional metadata dict (e.g., {'drive_file_id': '...'} for Drive sources)
 
         Returns:
             TeacherDocument with extracted comments
         """
         document_id = document_id or str(uuid.uuid4())
-        doc: Document = DocxDocument(str(file_path))
+        metadata = metadata or {}
 
-        logger.info("parsing_document", path=str(file_path), doc_id=document_id)
+        # Handle both Path and BytesIO sources
+        if isinstance(source, BytesIO):
+            # BytesIO stream - pass directly to python-docx
+            doc: Document = DocxDocument(source)
+            # For BytesIO, use drive_file_id from metadata if available, else document_id
+            source_path = metadata.get("drive_file_id", f"stream://{document_id}")
+            log_path = source_path
+        else:
+            # Path object - convert to string for python-docx
+            doc = DocxDocument(str(source))
+            source_path = str(source)
+            log_path = source_path
+
+        logger.info("parsing_document", path=log_path, doc_id=document_id)
 
         # Detect format
         detected_format = self._detect_format(doc)
@@ -154,7 +174,7 @@ class DocumentParser:
 
         return TeacherDocument(
             id=document_id,
-            source_path=str(file_path),
+            source_path=source_path,
             teacher_name="",  # To be filled from filename or external source
             class_name="",    # To be filled from filename or external source
             term="",          # To be filled from filename or external source
@@ -507,18 +527,26 @@ class RosterLoader:
 # Convenience Functions
 # =============================================================================
 
-def parse_document(file_path: str | Path) -> TeacherDocument:
+def parse_document(
+    source: Union[str, Path, BytesIO],
+    document_id: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
+) -> TeacherDocument:
     """
     Parse a document file into a TeacherDocument.
 
     Args:
-        file_path: Path to .docx file
+        source: Path to .docx file (str or Path), or BytesIO stream
+        document_id: Optional ID (generated if not provided)
+        metadata: Optional metadata dict (e.g., {'drive_file_id': '...'} for Drive sources)
 
     Returns:
         Parsed TeacherDocument
     """
     parser = DocumentParser()
-    return parser.parse_docx(Path(file_path))
+    if isinstance(source, BytesIO):
+        return parser.parse_docx(source, document_id=document_id, metadata=metadata)
+    return parser.parse_docx(Path(source), document_id=document_id, metadata=metadata)
 
 
 def print_validation_report(doc: TeacherDocument) -> None:

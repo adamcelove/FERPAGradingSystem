@@ -97,7 +97,7 @@ Focus: Validate the idea works end-to-end. Skip tests, accept hardcoded values, 
 
 ### 1.6 Modify DocumentParser to accept BytesIO
 
-- [ ] 1.6 Modify DocumentParser to accept BytesIO
+- [x] 1.6 Modify DocumentParser to accept BytesIO
   - **Do**:
     1. Modify `src/ferpa_feedback/stage_0_ingestion.py`
     2. Update `DocumentParser.parse_docx()` signature to accept `source: Union[Path, BytesIO]`
