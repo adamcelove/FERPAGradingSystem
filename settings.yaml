@@ -132,10 +132,10 @@ document:
 output:
   # Report format
   report_format: "json"  # Options: json, csv, html
-  
+
   # Include original text in output (may contain PII)
   include_original: false  # Set to true only for internal review
-  
+
   # Aggregation
   generate_summary: true
   summary_includes:
@@ -144,3 +144,49 @@ output:
     - name_mismatches_count
     - incomplete_comments_count
     - inconsistent_grades_count
+
+# Google Drive Integration Configuration
+gdrive:
+  # Authentication settings
+  auth:
+    # Authentication method: oauth2 (local dev) or workload_identity (Cloud Run)
+    method: "oauth2"
+
+    # OAuth2 settings (for local development)
+    oauth2:
+      client_secrets_path: "./credentials/client_secrets.json"
+      token_path: "./credentials/token.json"
+
+    # Workload Identity Federation settings (for Cloud Run)
+    # workload_identity:
+    #   project_id: "your-project-id"
+    #   pool_id: "your-pool-id"
+    #   provider_id: "your-provider-id"
+    #   service_account_email: "your-sa@your-project.iam.gserviceaccount.com"
+
+  # Processing settings
+  processing:
+    # Maximum concurrent downloads (used in parallel mode)
+    max_concurrent_downloads: 5
+    # Timeout for individual document download (seconds)
+    download_timeout_seconds: 60
+    # Timeout for folder discovery operation (seconds)
+    discovery_timeout_seconds: 120
+    # Maximum folder depth to traverse (0 = unlimited)
+    max_folder_depth: 10
+
+  # Upload settings
+  upload:
+    # Upload mode: OVERWRITE, VERSION, or SKIP
+    mode: "OVERWRITE"
+    # Name of output folder created in each source folder
+    output_folder_name: "pipeline_outputs"
+    # Maximum upload retry attempts
+    max_retries: 3
+    # Delay between retries (seconds)
+    retry_delay_seconds: 2
+
+  # Rate limiting (Google Drive API quota: 1000 requests per 100 seconds)
+  rate_limit:
+    # Stay under Google's limit with safety margin
+    requests_per_100_seconds: 900

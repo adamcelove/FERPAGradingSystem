@@ -188,7 +188,7 @@ Focus: Validate the idea works end-to-end. Skip tests, accept hardcoded values, 
 
 ### 1.11 Update settings.yaml with gdrive section
 
-- [ ] 1.11 Update settings.yaml with gdrive section
+- [x] 1.11 Update settings.yaml with gdrive section
   - **Do**:
     1. Modify `settings.yaml`
     2. Add `gdrive:` section with subsections:
