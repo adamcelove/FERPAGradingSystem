@@ -13,6 +13,7 @@ Example:
 """
 
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from io import BytesIO
 from typing import Any, Callable, Iterator, List, Optional, Union
@@ -154,10 +155,10 @@ class DocumentDownloader:
         documents: List[DriveDocument],
         progress_callback: Optional[Callable[[int, int], None]] = None,
     ) -> Iterator[Union[DownloadedDocument, DownloadError]]:
-        """Download multiple documents sequentially.
+        """Download multiple documents in parallel using ThreadPoolExecutor.
 
-        For POC, uses sequential downloads. Parallel downloads will be
-        added in Phase 2 using ThreadPoolExecutor.
+        Uses max_concurrent threads to download documents concurrently,
+        significantly improving throughput for large batches.
 
         Args:
             documents: List of documents to download.
@@ -165,30 +166,43 @@ class DocumentDownloader:
 
         Yields:
             DownloadedDocument on success, DownloadError on failure.
+            Note: Results are yielded in completion order, not submission order.
         """
-        total = len(documents)
+        if not documents:
+            return
 
-        for index, doc in enumerate(documents):
+        total = len(documents)
+        completed_count = 0
+
+        def _download_one(doc: DriveDocument) -> Union[DownloadedDocument, DownloadError]:
+            """Download a single document, returning result or error."""
             try:
-                downloaded = self.download_document(doc)
-                yield downloaded
+                return self.download_document(doc)
             except (DriveExportError, FileTooLargeError, DownloadError) as e:
-                # Yield the error so caller can handle it
                 if isinstance(e, DownloadError):
-                    yield e
-                else:
-                    # Wrap other errors as DownloadError for consistent handling
-                    yield DownloadError(str(e), file_id=doc.id)
+                    return e
+                return DownloadError(str(e), file_id=doc.id)
             except Exception as e:
-                # Wrap unexpected errors
-                yield DownloadError(
+                return DownloadError(
                     f"Unexpected error downloading '{doc.name}': {e}",
                     file_id=doc.id,
                 )
 
-            # Report progress after each document
-            if progress_callback is not None:
-                progress_callback(index + 1, total)
+        with ThreadPoolExecutor(max_workers=self._max_concurrent) as executor:
+            # Submit all download tasks
+            future_to_doc = {
+                executor.submit(_download_one, doc): doc for doc in documents
+            }
+
+            # Yield results as they complete
+            for future in as_completed(future_to_doc):
+                result = future.result()
+                yield result
+
+                # Report progress after each completion
+                completed_count += 1
+                if progress_callback is not None:
+                    progress_callback(completed_count, total)
 
     def _export_google_doc(self, doc: DriveDocument) -> BytesIO:
         """Export a Google Doc to .docx format.

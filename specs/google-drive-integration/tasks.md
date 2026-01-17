@@ -287,7 +287,7 @@ After POC validated, clean up code and add robustness.
 
 ### 2.3 Add parallel downloads with ThreadPoolExecutor
 
-- [ ] 2.3 Add parallel downloads with ThreadPoolExecutor
+- [x] 2.3 Add parallel downloads with ThreadPoolExecutor
   - **Do**:
     1. Modify `src/ferpa_feedback/gdrive/downloader.py`
     2. Add `max_concurrent` parameter to `DocumentDownloader.__init__()`
