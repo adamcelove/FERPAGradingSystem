@@ -232,7 +232,7 @@ Focus: Validate the idea works end-to-end. Skip tests, accept hardcoded values, 
 
 ### 1.14 POC Checkpoint - End-to-end validation
 
-- [ ] 1.14 POC Checkpoint
+- [x] 1.14 POC Checkpoint
   - **Do**: Verify feature works end-to-end
     1. Set up OAuth2 credentials (client_secrets.json)
     2. Share a test Drive folder with test documents
