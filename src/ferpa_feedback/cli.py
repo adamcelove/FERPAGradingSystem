@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import Any, List, Optional
 
 import typer
 from rich.console import Console
@@ -295,10 +295,7 @@ def process(
 
     # Generate reports for each processed document
     # Determine output directory (relative to input or current working directory)
-    if input_path.is_dir():
-        output_dir = input_path / "outputs"
-    else:
-        output_dir = input_path.parent / "outputs"
+    output_dir = input_path / "outputs" if input_path.is_dir() else input_path.parent / "outputs"
 
     for file_path, document in processed_docs:
         # Grammar report (in same folder as input)
@@ -544,7 +541,7 @@ def gdrive_process(
         console.print("\n[bold]Folder Structure:[/]")
         _print_folder_tree(folder_map.root, console)
 
-        console.print(f"\n[bold]Summary:[/]")
+        console.print("\n[bold]Summary:[/]")
         console.print(f"  Total folders: {folder_map.total_folders}")
         console.print(f"  Total documents: {folder_map.total_documents}")
         console.print(f"  Leaf folders (processing targets): {len(folder_map.get_leaf_folders())}")
@@ -594,7 +591,7 @@ def gdrive_process(
 
     # Print summary
     console.print("\n[bold green]Processing complete![/]")
-    console.print(f"\n[bold]Summary:[/]")
+    console.print("\n[bold]Summary:[/]")
     console.print(f"  Duration: {summary.duration_seconds:.1f}s")
     console.print(f"  Documents processed: {summary.successful}/{summary.total_documents}")
     console.print(f"  Failed: {summary.failed}")
