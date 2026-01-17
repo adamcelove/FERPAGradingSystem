@@ -249,7 +249,7 @@ After POC validated, clean up code and add robustness.
 
 ### 2.1 Add rate limiter for API calls
 
-- [ ] 2.1 Add rate limiter for API calls
+- [x] 2.1 Add rate limiter for API calls
   - **Do**:
     1. Create `src/ferpa_feedback/gdrive/rate_limiter.py`
     2. Implement `RateLimiter` class with fixed window algorithm
