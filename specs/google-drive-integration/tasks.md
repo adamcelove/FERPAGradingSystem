@@ -48,7 +48,7 @@ Focus: Validate the idea works end-to-end. Skip tests, accept hardcoded values, 
 
 ### 1.3 Implement FolderDiscovery with FolderMap
 
-- [ ] 1.3 Implement FolderDiscovery with FolderMap
+- [x] 1.3 Implement FolderDiscovery with FolderMap
   - **Do**:
     1. Create `src/ferpa_feedback/gdrive/discovery.py`
     2. Implement `FolderNode` dataclass with id, name, parent_id, depth, children, documents, is_leaf property, path property
