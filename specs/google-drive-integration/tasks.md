@@ -165,7 +165,7 @@ Focus: Validate the idea works end-to-end. Skip tests, accept hardcoded values, 
 
 ### 1.10 Add gdrive-process CLI command
 
-- [ ] 1.10 Add gdrive-process CLI command
+- [x] 1.10 Add gdrive-process CLI command
   - **Do**:
     1. Modify `src/ferpa_feedback/cli.py`
     2. Add `gdrive_process` command with Typer

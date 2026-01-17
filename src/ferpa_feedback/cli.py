@@ -6,6 +6,7 @@ with FERPA-compliant PII detection and anonymization.
 
 Usage:
     ferpa-feedback process INPUT_PATH [OPTIONS]
+    ferpa-feedback gdrive-process ROOT_FOLDER [OPTIONS]
     ferpa-feedback warmup
 """
 
@@ -13,11 +14,12 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Any, List, Optional
 
 import typer
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.tree import Tree
 
 from ferpa_feedback.models import TeacherDocument
 from ferpa_feedback.pipeline import create_pipeline
@@ -385,6 +387,257 @@ def review(
         console.print("[red]Review UI requires optional dependencies.[/]")
         console.print("[yellow]Install with: pip install ferpa-feedback[review-ui][/]")
         raise typer.Exit(1) from e
+
+
+@app.command("gdrive-process")
+def gdrive_process(
+    root_folder: str = typer.Argument(
+        ...,
+        help="Google Drive folder ID to process (the long string from the folder URL)",
+    ),
+    target_folder: Optional[List[str]] = typer.Option(
+        None,
+        "--target-folder",
+        "-t",
+        help="Filter to specific folder names (supports glob patterns like 'September*'). Can be repeated.",
+    ),
+    list_folders: bool = typer.Option(
+        False,
+        "--list-folders",
+        "-l",
+        help="List folder structure without processing",
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Show what would be processed without actually processing",
+    ),
+    output_local: Optional[Path] = typer.Option(
+        None,
+        "--output-local",
+        "-o",
+        help="Write results to local directory instead of uploading to Drive",
+    ),
+    roster: Optional[Path] = typer.Option(
+        None,
+        "--roster",
+        "-r",
+        help="Path to roster CSV file for name matching",
+        exists=True,
+    ),
+    config: Optional[Path] = typer.Option(
+        None,
+        "--config",
+        "-c",
+        help="Path to settings.yaml configuration file",
+        exists=True,
+    ),
+    parallel: int = typer.Option(
+        5,
+        "--parallel",
+        "-p",
+        help="Number of parallel downloads (default: 5)",
+    ),
+) -> None:
+    """
+    Process documents from Google Drive through the FERPA pipeline.
+
+    Downloads documents from a shared Google Drive folder, processes them
+    through grammar checking, name verification, and anonymization stages,
+    then uploads results back to Drive (or saves locally with --output-local).
+
+    First run requires OAuth2 authentication - a browser window will open
+    for authorization.
+
+    Examples:
+        # List folder structure
+        ferpa-feedback gdrive-process 1abc123xyz --list-folders
+
+        # Process all documents
+        ferpa-feedback gdrive-process 1abc123xyz
+
+        # Process only September folders
+        ferpa-feedback gdrive-process 1abc123xyz -t "September*"
+
+        # Process Interim 1 and Interim 3
+        ferpa-feedback gdrive-process 1abc123xyz -t "Interim 1*" -t "Interim 3*"
+
+        # Dry run to see what would be processed
+        ferpa-feedback gdrive-process 1abc123xyz --dry-run
+
+        # Save results locally instead of uploading to Drive
+        ferpa-feedback gdrive-process 1abc123xyz -o ./output
+    """
+    # Import gdrive components (deferred to avoid loading at CLI startup)
+    try:
+        from ferpa_feedback.gdrive.auth import OAuth2Authenticator
+        from ferpa_feedback.gdrive.config import DriveConfig
+        from ferpa_feedback.gdrive.processor import DriveProcessor, ProcessingProgress
+    except ImportError as e:
+        console.print("[red]Google Drive dependencies not installed.[/]")
+        console.print("[yellow]Install with: pip install google-api-python-client google-auth-oauthlib[/]")
+        raise typer.Exit(1) from e
+
+    console.print(f"[bold blue]Google Drive Processing:[/] {root_folder}")
+
+    # Initialize configuration
+    drive_config = DriveConfig()
+    if parallel:
+        drive_config.processing.max_concurrent_downloads = parallel
+
+    # Initialize authenticator
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        progress.add_task("Authenticating with Google Drive...", total=None)
+        try:
+            authenticator = OAuth2Authenticator(
+                client_secrets_path=drive_config.auth.oauth2.client_secrets_path,
+                token_path=drive_config.auth.oauth2.token_path,
+            )
+            _ = authenticator.get_service()
+            console.print(f"[green]Authenticated as:[/] {authenticator.service_account_email}")
+        except Exception as e:
+            console.print(f"[red]Authentication failed:[/] {e}")
+            console.print("\n[yellow]Make sure you have client_secrets.json in the current directory.[/]")
+            console.print("[yellow]Download from Google Cloud Console > APIs & Services > Credentials[/]")
+            raise typer.Exit(1) from e
+
+    # Create pipeline
+    config_path = str(config) if config else None
+    roster_path = str(roster) if roster else None
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        progress.add_task("Initializing pipeline...", total=None)
+        pipeline = create_pipeline(config_path=config_path, roster_path=roster_path)
+
+    # Create processor
+    processor = DriveProcessor(
+        authenticator=authenticator,
+        pipeline=pipeline,
+        config=drive_config,
+    )
+
+    # Handle --list-folders option
+    if list_folders:
+        console.print("\n[bold]Discovering folder structure...[/]")
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            progress.add_task("Scanning folders...", total=None)
+            try:
+                folder_map = processor.list_folders(root_folder)
+            except Exception as e:
+                console.print(f"[red]Failed to access folder:[/] {e}")
+                console.print(f"\n[yellow]Make sure the folder is shared with {authenticator.service_account_email}[/]")
+                raise typer.Exit(1) from e
+
+        # Print folder tree
+        console.print("\n[bold]Folder Structure:[/]")
+        _print_folder_tree(folder_map.root, console)
+
+        console.print(f"\n[bold]Summary:[/]")
+        console.print(f"  Total folders: {folder_map.total_folders}")
+        console.print(f"  Total documents: {folder_map.total_documents}")
+        console.print(f"  Leaf folders (processing targets): {len(folder_map.get_leaf_folders())}")
+        raise typer.Exit(0)
+
+    # Process documents
+    target_patterns = list(target_folder) if target_folder else None
+
+    if target_patterns:
+        console.print(f"[dim]Target patterns: {', '.join(target_patterns)}[/]")
+
+    if dry_run:
+        console.print("[yellow]Dry run mode - no documents will be processed[/]")
+
+    if output_local:
+        console.print(f"[dim]Output directory: {output_local}[/]")
+
+    # Progress callback for rich display
+    def progress_callback(prog: ProcessingProgress) -> None:
+        # Progress is tracked by the rich Progress context manager
+        pass
+
+    console.print("\n[bold]Processing...[/]")
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Starting...", total=None)
+
+        def update_progress(prog: ProcessingProgress) -> None:
+            desc = f"Processing: {prog.current_document or 'initializing'} ({prog.processed_documents}/{prog.total_documents})"
+            progress.update(task, description=desc)
+
+        try:
+            summary = processor.process(
+                root_folder_id=root_folder,
+                target_patterns=target_patterns,
+                dry_run=dry_run,
+                output_local=output_local,
+                progress_callback=update_progress,
+            )
+        except Exception as e:
+            console.print(f"[red]Processing failed:[/] {e}")
+            raise typer.Exit(1) from e
+
+    # Print summary
+    console.print("\n[bold green]Processing complete![/]")
+    console.print(f"\n[bold]Summary:[/]")
+    console.print(f"  Duration: {summary.duration_seconds:.1f}s")
+    console.print(f"  Documents processed: {summary.successful}/{summary.total_documents}")
+    console.print(f"  Failed: {summary.failed}")
+    console.print(f"  Grammar issues found: {summary.grammar_issues_found}")
+    console.print(f"  PII instances replaced: {summary.pii_instances_replaced}")
+    console.print(f"  Uploads completed: {summary.uploads_completed}")
+
+    if summary.errors:
+        console.print(f"\n[yellow]Errors ({len(summary.errors)}):[/]")
+        for error in summary.errors[:5]:  # Show first 5 errors
+            console.print(f"  - {error['document']}: {error['error']}")
+        if len(summary.errors) > 5:
+            console.print(f"  ... and {len(summary.errors) - 5} more")
+
+    # Return appropriate exit code
+    if summary.failed > 0 and summary.successful == 0:
+        raise typer.Exit(1)
+    elif summary.failed > 0:
+        raise typer.Exit(2)  # Partial success
+
+
+def _print_folder_tree(node: Any, console: Console, prefix: str = "") -> None:
+    """Print folder tree using rich Tree component.
+
+    Args:
+        node: Root folder node to print (FolderNode from gdrive.discovery).
+        console: Rich console for output.
+        prefix: Prefix for tree branches (internal use).
+    """
+    tree = Tree(f"[bold]{node.name}[/] ({len(node.documents)} docs)")
+
+    def add_children(parent_tree: Tree, folder: Any) -> None:
+        for child in folder.children:
+            doc_count = len(child.documents)
+            is_leaf = child.is_leaf
+            if is_leaf:
+                branch = parent_tree.add(f"[green]{child.name}[/] ({doc_count} docs) [dim][leaf][/]")
+            else:
+                branch = parent_tree.add(f"{child.name} ({doc_count} docs)")
+            add_children(branch, child)
+
+    add_children(tree, node)
+    console.print(tree)
 
 
 if __name__ == "__main__":
