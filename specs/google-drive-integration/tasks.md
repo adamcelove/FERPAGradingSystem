@@ -269,7 +269,7 @@ After POC validated, clean up code and add robustness.
 
 ### 2.2 Implement Workload Identity Federation authenticator
 
-- [ ] 2.2 Implement Workload Identity Federation authenticator
+- [x] 2.2 Implement Workload Identity Federation authenticator
   - **Do**:
     1. Modify `src/ferpa_feedback/gdrive/auth.py`
     2. Implement `WorkloadIdentityAuthenticator` class
