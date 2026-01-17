@@ -5,7 +5,7 @@ Tests folder discovery, pattern matching, metadata extraction, and JSON serializ
 
 import json
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -13,11 +13,9 @@ from ferpa_feedback.gdrive.discovery import (
     DriveDocument,
     FolderDiscovery,
     FolderMap,
-    FolderMetadata,
     FolderNode,
     match_folder_pattern,
 )
-
 
 # -----------------------------------------------------------------------------
 # Fixtures

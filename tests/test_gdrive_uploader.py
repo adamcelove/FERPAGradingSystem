@@ -10,7 +10,6 @@ import pytest
 from ferpa_feedback.gdrive.discovery import DriveDocument
 from ferpa_feedback.gdrive.uploader import ResultUploader, UploadMode, UploadResult
 
-
 # -----------------------------------------------------------------------------
 # Fixtures
 # -----------------------------------------------------------------------------
@@ -270,6 +269,7 @@ class TestRetryLogic:
             )
 
         assert result.success is False
+        assert result.error is not None
         assert "after 3 attempts" in result.error
         assert "Persistent error" in result.error
 
@@ -391,6 +391,7 @@ class TestUploadResult:
 
         assert result.file_id == ""
         assert result.success is False
+        assert result.error is not None
         assert "Permission denied" in result.error
 
 

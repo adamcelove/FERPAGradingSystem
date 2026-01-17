@@ -12,7 +12,6 @@ from ferpa_feedback.gdrive.discovery import DriveDocument
 from ferpa_feedback.gdrive.downloader import DocumentDownloader, DownloadedDocument
 from ferpa_feedback.gdrive.errors import DownloadError, DriveExportError
 
-
 # -----------------------------------------------------------------------------
 # Fixtures
 # -----------------------------------------------------------------------------
@@ -81,7 +80,7 @@ def unsupported_file() -> DriveDocument:
 # -----------------------------------------------------------------------------
 
 
-def create_mock_downloader(content: bytes) -> MagicMock:
+def create_mock_downloader(content: bytes) -> MagicMock:  # noqa: ARG001
     """Create a mock MediaIoBaseDownload that returns the given content."""
     mock_downloader = MagicMock()
     # Simulate the chunked download pattern
@@ -91,9 +90,11 @@ def create_mock_downloader(content: bytes) -> MagicMock:
     ]
 
     # Actually write the content to the BytesIO when next_chunk is called
-    def write_content_side_effect():
+    def write_content_side_effect() -> None:
         # This is a simplified simulation
         pass
+
+    _ = write_content_side_effect  # Suppress unused warning
 
     return mock_downloader
 
