@@ -30,6 +30,10 @@ class WorkloadIdentityConfig:
     pool_id: str = ""
     provider_id: str = ""
     service_account_email: str = ""
+    scopes: List[str] = field(default_factory=lambda: [
+        "https://www.googleapis.com/auth/drive.readonly",
+        "https://www.googleapis.com/auth/drive.file",
+    ])
 
 
 @dataclass
@@ -120,6 +124,8 @@ class DriveConfig:
                 config.auth.workload_identity.service_account_email = wif_data.get(
                     "service_account_email", ""
                 )
+                if "scopes" in wif_data:
+                    config.auth.workload_identity.scopes = wif_data["scopes"]
 
         if "processing" in data:
             proc_data = data["processing"]
