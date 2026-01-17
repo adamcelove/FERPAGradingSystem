@@ -7,7 +7,7 @@ limiting settings.
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List
+from typing import Any, Dict, List
 
 
 @dataclass
@@ -88,7 +88,7 @@ class DriveConfig:
     rate_limit: RateLimitConfig = field(default_factory=RateLimitConfig)
 
     @classmethod
-    def from_dict(cls, data: Dict) -> "DriveConfig":
+    def from_dict(cls, data: Dict[str, Any]) -> "DriveConfig":
         """Create a DriveConfig from a dictionary (e.g., from YAML).
 
         Args:

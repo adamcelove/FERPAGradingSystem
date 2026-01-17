@@ -17,7 +17,7 @@ import fnmatch
 import json
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Dict, Iterator, List, Optional
+from typing import Any, Dict, List, Optional
 
 from ferpa_feedback.gdrive.errors import DiscoveryTimeoutError, DriveAccessError
 
@@ -482,7 +482,7 @@ class FolderDiscovery:
             Folder metadata dict or None if not accessible.
         """
         try:
-            result = (
+            result: Dict[str, Any] = (
                 self._service.files()
                 .get(fileId=folder_id, fields="id,name,mimeType")
                 .execute()

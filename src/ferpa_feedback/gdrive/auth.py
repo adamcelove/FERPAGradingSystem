@@ -21,13 +21,12 @@ Example:
 
 import os
 from pathlib import Path
-from typing import List, Optional, Protocol
+from typing import Any, List, Optional, Protocol
 
 from googleapiclient.discovery import Resource, build
 
 from ferpa_feedback.gdrive.config import DriveConfig
 from ferpa_feedback.gdrive.errors import AuthenticationError
-
 
 # Google Drive API version
 DRIVE_API_VERSION = "v3"
@@ -104,7 +103,7 @@ class OAuth2Authenticator:
         self._token_path = token_path or self._client_secrets_path.parent / ".gdrive_token.json"
         self._scopes = scopes or DEFAULT_SCOPES.copy()
         self._service: Optional[Resource] = None
-        self._credentials: Optional[object] = None
+        self._credentials: Optional[Any] = None
         self._user_email: Optional[str] = None
 
     def get_service(self) -> Resource:
@@ -142,10 +141,10 @@ class OAuth2Authenticator:
         # Check for existing token
         if self._token_path.exists():
             try:
-                creds = Credentials.from_authorized_user_file(
+                creds = Credentials.from_authorized_user_file(  # type: ignore[no-untyped-call]
                     str(self._token_path), self._scopes
                 )
-            except Exception as e:
+            except Exception:
                 # Token file is invalid, will re-authenticate
                 creds = None
 
@@ -154,7 +153,7 @@ class OAuth2Authenticator:
             if creds is not None and creds.expired and creds.refresh_token:
                 # Refresh the token
                 try:
-                    creds.refresh(Request())
+                    creds.refresh(Request())  # type: ignore[no-untyped-call]
                 except Exception as e:
                     raise AuthenticationError(
                         f"Failed to refresh OAuth2 token: {e}",
@@ -215,10 +214,10 @@ class OAuth2Authenticator:
             return
 
         try:
-            self._credentials.refresh(Request())
+            self._credentials.refresh(Request())  # type: ignore[no-untyped-call]
             # Update cached token
             self._token_path.write_text(self._credentials.to_json())
-        except Exception as e:
+        except Exception:
             # Re-authenticate if refresh fails
             self._credentials = None
             self._service = None
